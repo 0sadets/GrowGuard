@@ -2,12 +2,17 @@
 
 # dependencies
 node_modules/
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Expo
 .expo/
 dist/
 web-build/
 expo-env.d.ts
+.expo-shared/
 
 # Native
 .kotlin/
@@ -20,6 +25,10 @@ expo-env.d.ts
 
 # Metro
 .metro-health-check*
+
+# Windows
+Thumbs.db
+ehthumbs.db
 
 # debug
 npm-debug.*
@@ -37,3 +46,34 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+# Bundle output
+*.jsbundle
+*.map
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# Metro
+metro-cache/
+haul-debug.log
+
+# Watchman
+.watchmanconfig
+
+# Jest
+coverage/
+jest/
+
+# TypeScript
+*.tsbuildinfo
+
+# VSCode
+.vscode/
+
+# Temporary files
+tmp/
+temp/
