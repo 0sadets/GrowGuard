@@ -2,6 +2,9 @@ import { router } from "expo-router";
 import { useState } from "react";
 import {
   Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -15,7 +18,6 @@ export default function StepOne() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Стейти для фокусу
   const [usernameFocused, setUsernameFocused] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -26,86 +28,96 @@ export default function StepOne() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View></View>
-        <Text style={styles.logoText}>GrowGuard</Text>
-        <Image
-          source={require("D:/Vodnic/4 курс/2 семестр/диплом/ReactApp/GrowGuard/assets/icons/sprout.png")}
-          style={styles.logoImage}
-        />
-      </View>
-
-      <Text style={styles.title}>Створення акаунту</Text>
-      <View>
-        <View style={styles.inputContainre}>
-          <Text style={styles.inputLabel}>Ім'я користувача</Text>
-          <TextInput
-            style={[styles.input, usernameFocused && styles.inputFocused]}
-            onFocus={() => setUsernameFocused(true)}
-            onBlur={() => setUsernameFocused(false)}
-            placeholder="Ваше ім'я користувача"
-            placeholderTextColor="#999"
-            value={username}
-            onChangeText={setUsername}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <View></View>
+          <Text style={styles.logoText}>GrowGuard</Text>
+          <Image
+            source={require("D:/Vodnic/GrowGuard/assets/icons/sprout.png")}
+            style={styles.logoImage}
           />
         </View>
 
-        <View style={styles.inputContainre}>
-          <Text style={styles.inputLabel}>Email</Text>
-          <TextInput
-            style={[styles.input, emailFocused && styles.inputFocused]}
-            onFocus={() => setEmailFocused(true)}
-            onBlur={() => setEmailFocused(false)}
-            placeholder="Ваш email"
-            placeholderTextColor="#999"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
-        </View>
-        <View style={styles.inputContainre}>
-          <Text style={styles.inputLabel}>Пароль</Text>
-          <View style={styles.passwordContainer}>
+        <Text style={styles.title}>Створення акаунту</Text>
+        <View>
+          <View style={styles.inputContainre}>
+            <Text style={styles.inputLabel}>Ім'я користувача</Text>
             <TextInput
-              style={[styles.input, passwordFocused && styles.inputFocused]}
-              onFocus={() => setPasswordFocused(true)}
-              onBlur={() => setPasswordFocused(false)}
-              placeholder="Пароль"
+              style={[styles.input, usernameFocused && styles.inputFocused]}
+              onFocus={() => setUsernameFocused(true)}
+              onBlur={() => setUsernameFocused(false)}
+              placeholder="Ваше ім'я користувача"
               placeholderTextColor="#999"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={setPassword}
+              value={username}
+              onChangeText={setUsername}
             />
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.eyeIcon}
-            >
-              <Image
-                source={
-                  showPassword
-                    ? require("D:/Vodnic/4 курс/2 семестр/диплом/ReactApp/GrowGuard/assets/icons/9118015_eye_open_icon.png")
-                    : require("D:/Vodnic/4 курс/2 семестр/диплом/ReactApp/GrowGuard/assets/icons/9023370_eye_closed_fill_icon.png")
-                }
-                style={styles.eyeImage}
+          </View>
+
+          <View style={styles.inputContainre}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={[styles.input, emailFocused && styles.inputFocused]}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
+              placeholder="Ваш email"
+              placeholderTextColor="#999"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+          </View>
+          <View style={styles.inputContainre}>
+            <Text style={styles.inputLabel}>Пароль</Text>
+            <View style={styles.passwordContainer}>
+              <TextInput
+                style={[styles.input, passwordFocused && styles.inputFocused]}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+                placeholder="Ваш пароль"
+                placeholderTextColor="#999"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
               />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.eyeIcon}
+              >
+                <Image
+                  source={
+                    showPassword
+                      ? require("D:/Vodnic/GrowGuard/assets/icons/9118015_eye_open_icon.png")
+                      : require("D:/Vodnic/GrowGuard/assets/icons/9023370_eye_closed_fill_icon.png")
+                  }
+                  style={styles.eyeImage}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-      <View style={styles.bottomPart}>
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>Створити акаунт</Text>
-        </TouchableOpacity>
 
-        {/* Індикатори сторінок */}
-        <View style={styles.dots}>
-          <View style={styles.activeDot} />
-          <View style={styles.dot} />
-          <View style={styles.dot} />
+        <View style={styles.bottomPart}>
+          <TouchableOpacity style={styles.button} onPress={handleNext}>
+            <Text style={styles.buttonText}>Створити акаунт</Text>
+          </TouchableOpacity>
+
+          {/* Індикатори сторінок */}
+          <View style={styles.dots}>
+            <View style={styles.activeDot} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+          </View>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -116,24 +128,24 @@ const styles = StyleSheet.create({
     paddingTop: 30,
     backgroundColor: "#fff",
     justifyContent: "space-between",
-    
   },
   header: {
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: 50,
     display: "flex",
     flexDirection: "row",
     justifyContent: "center",
-    top:-10,
-    borderBottomColor:"#4C6E45",
+    // top: -10,
+    borderBottomColor: "#4C6E45",
     borderBottomWidth: 1,
-    paddingBottom:8,
+    paddingBottom: 8,
   },
   logoText: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#4C6E45",
     marginRight: 15,
+    padding: 0,
   },
   logoImage: {
     width: 24,
@@ -145,7 +157,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     marginBottom: 32,
-    color:'#423a3a'
+    color: "#423a3a",
   },
   input: {
     borderWidth: 1,
@@ -154,7 +166,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     // marginBottom: 16,
-    width: "100%", // щоб інпут заповнив всю доступну ширину
+    width: "100%", 
   },
   inputContainre: {},
   inputLabel: {
@@ -204,7 +216,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     gap: 20,
-    top: -40,
+    // top: -40,
   },
   dot: {
     width: 12,
