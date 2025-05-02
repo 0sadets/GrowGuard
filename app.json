@@ -4,10 +4,11 @@
     "slug": "GrowGuard",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    
     "scheme": "growguard",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    
     "ios": {
       "supportsTablet": true
     },
