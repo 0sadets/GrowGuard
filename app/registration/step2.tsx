@@ -31,7 +31,7 @@ export default function StepTwo() {
   const [heightFocused, setHeightFocused] = useState(false);
 
   const handleNext = () => {
-    router.push("/registration/step2");
+    router.push("/registration/step3");
   };
 
   return (
