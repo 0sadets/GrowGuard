@@ -12,6 +12,8 @@ import {
   View,
 } from "react-native";
 
+import { registerUser } from "@/lib/api";
+
 export default function StepOne() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -23,8 +25,16 @@ export default function StepOne() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [passwordFocusedColor, setPasswordFocusedColor] = useState(false);
 
-  const handleNext = () => {
-    router.push("/registration/step2");
+  const handleNext = async () => {
+    try {
+      console.log("Запит на реєстрацію...");
+      const result = await registerUser(username, email, password);
+      console.log("Успішна реєстрація:", result);
+      router.push("/registration/step2");
+    } catch (err) {
+      console.error("Помилка при реєстрації:", err);
+      alert("Не вдалося зареєструватися. Перевірте дані.");
+    }
   };
 
   return (
@@ -165,7 +175,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     // marginBottom: 16,
-    width: "100%", 
+    width: "100%",
   },
   inputContainre: {},
   inputLabel: {
