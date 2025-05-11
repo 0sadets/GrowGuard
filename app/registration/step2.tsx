@@ -30,9 +30,55 @@ export default function StepTwo() {
   const [widthFocused, setWidthFocused] = useState(false);
   const [heightFocused, setHeightFocused] = useState(false);
 
-  const handleNext = () => {
-    router.push("/registration/step3");
+  const [errors, setErrors] = useState({
+    name: "",
+    location: "",
+    season: "",
+    length: "",
+    width: "",
+    height: "",
+  });
+
+  const validateFields = () => {
+    const newErrors = {
+      name: "",
+      location: "",
+      season: "",
+      length: "",
+      width: "",
+      height: "",
+    };
+
+    if (!name.trim()) newErrors.name = "Назва є обовʼязковою";
+    if (!location.trim()) newErrors.location = "Розташування є обовʼязковим";
+    else if (name.length > 100)
+      newErrors.name = "Назва не може перевищувати 100 символів";
+
+    if (location.length > 200)
+      newErrors.location = "Максимальна довжина — 200 символів";
+
+    if (!season) newErrors.season = "Оберіть сезон";
+
+    if (!length || isNaN(Number(length)) || Number(length) <= 0)
+      newErrors.length = "Довжина має бути більше 0";
+
+    if (!width || isNaN(Number(width)) || Number(width) <= 0)
+      newErrors.width = "Ширина має бути більше 0";
+
+    if (!height || isNaN(Number(height)) || Number(height) <= 0)
+      newErrors.height = "Висота має бути більше 0";
+
+    setErrors(newErrors);
+
+    return Object.values(newErrors).every((val) => val === "");
   };
+
+  const handleNext = () => {
+  if (validateFields()) {
+    router.push("/registration/step3");
+  }
+};
+
 
   return (
     <KeyboardAvoidingView
@@ -40,7 +86,7 @@ export default function StepTwo() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 170 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -65,6 +111,7 @@ export default function StepTwo() {
               value={name}
               onChangeText={setName}
             />
+            {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
           </View>
           <View>
             <Text style={styles.inputLabel}>Розташування теплиці</Text>
@@ -77,6 +124,7 @@ export default function StepTwo() {
               value={location}
               onChangeText={setLocation}
             />
+            {errors.location ? <Text style={styles.errorText}>{errors.location}</Text> : null}
           </View>
           <View>
             <Text style={styles.inputLabel}>Сезон вирощування</Text>
@@ -100,6 +148,7 @@ export default function StepTwo() {
                 <Picker.Item label="Зима" value="winter" />
               </Picker>
             </View>
+            {errors.season ? <Text style={styles.errorText}>{errors.season}</Text> : null}
           </View>
           <Text style={styles.inputSubTitle}>Параметри теплиці(м)</Text>
 
@@ -141,6 +190,9 @@ export default function StepTwo() {
               />
             </View>
           </View>
+          {errors.length ? <Text style={styles.errorText}>{errors.length}</Text> : null}
+          {errors.width ? <Text style={styles.errorText}>{errors.width}</Text> : null}
+          {errors.height  ? <Text style={styles.errorText}>{errors.height }</Text> : null}
         </View>
 
         <View style={styles.bottomPart}>
@@ -190,6 +242,7 @@ const styles = StyleSheet.create({
     color: "#423a3a",
   },
   inputSubTitle: {
+    marginTop:24,
     fontSize: 22,
     textAlign: "center",
   },
@@ -201,7 +254,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     width: "100%",
   },
-  
+
   backButton: {
     left: -15,
   },
@@ -232,6 +285,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     gap: 20,
+    marginTop: 60,
   },
   dot: {
     width: 12,
@@ -246,23 +300,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#A4D490",
   },
   bottomPart: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    height: "25%",
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
   },
   inputContainre: {
-    display:"flex",
-    flexDirection:"row",
-    justifyContent:"space-between",
-    width:"100%",
-
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
   },
   lilInputBlock: {
     display: "flex",
     flexDirection: "column",
-    margin:0,
-    alignItems:"center",
+    margin: 0,
+    alignItems: "center",
     // textAlign:"center",
   },
   inputLil: {
@@ -272,8 +325,14 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     width: 60,
-    textAlign:"center",
+    textAlign: "center",
   },
+  errorText: {
+  color: "#D9534F",
+  marginTop: 4,
+  fontSize: 14,
+}
+
 });
 
 const pickerStyles = StyleSheet.create({
@@ -282,7 +341,6 @@ const pickerStyles = StyleSheet.create({
     borderColor: "#ddd",
     borderRadius: 10,
     // padding: 12,
-    marginBottom: 16,
   },
   input: {
     fontSize: 16,
@@ -292,5 +350,4 @@ const pickerStyles = StyleSheet.create({
     borderColor: "#A4D490",
     borderWidth: 2,
   },
- 
 });

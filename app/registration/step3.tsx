@@ -1,15 +1,13 @@
 import BackButton from "@/components/BackButton";
+import { plantWithExamples } from "@/lib/api";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -20,109 +18,115 @@ const handleNext = () => {
   router.push("/registration/step3");
 };
 
-const dummyCategories = [
-  { id: 1, name: "Овочі", examples: "Помідори, огірки, перець" },
-  { id: 2, name: "Зелень", examples: "Петрушка, кріп, базилік" },
-  { id: 3, name: "Коренеплоди", examples: "Морква, буряк, редька" },
-  { id: 4, name: "Ягоди", examples: "Полуниця, малина" },
-  { id: 5, name: "Фрукти", examples: "Лимон, апельсин" },
-  { id: 6, name: "Тепличні квіти", examples: "Троянди, орхідеї" },
-  { id: 7, name: "Гриби", examples: "Печериці, гливи" },
-];
-
 export default function SteoThree() {
+  const [categories, setCategories] = useState<any[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalText, setModalText] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await plantWithExamples(); // Отримуємо дані з API
+        setCategories(data); // Зберігаємо отримані дані в стейт
+      } catch (error) {
+        console.error("Помилка при отриманні даних:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const openInfo = (examples: string) => {
+    setModalText(examples);
+    setModalVisible(true);
+  };
+  const handleValidation = () => {
+    if (selected.length === 0) {
+      setErrorMessage("Будь ласка, оберіть хоча б одну категорію культур.");
+    } else {
+      setErrorMessage("");
+      handleNext();
+    }
+  };
   const toggleCategory = (id: number) => {
     if (selected.includes(id)) {
       setSelected((prev) => prev.filter((item) => item !== id));
     } else if (selected.length < 3) {
       setSelected((prev) => [...prev, id]);
     }
+    if (selected.length === 0) {
+    setErrorMessage(""); 
+  }
   };
 
-  const openInfo = (examples: string) => {
-    setModalText(examples);
-    setModalVisible(true);
-  };
+  console.log("Категорії:", categories);
 
   return (
-    // <KeyboardAvoidingView
-    //   style={styles.container}
-    //   behavior={Platform.OS === "ios" ? "padding" : "height"}
-    // >
-    //   <ScrollView
-    //     contentContainerStyle={{ flexGrow: 1 }}
-    //     keyboardShouldPersistTaps="handled"
-    //     showsVerticalScrollIndicator={false}
-    //   >
-        <View style={styles.container}>
-        <View style={styles.header}>
-          <BackButton style={styles.backButton} />
-          <Text style={styles.prevPageTitle}>Налаштування теплиці</Text>
-          <Image
-            source={require("D:/Vodnic/GrowGuard/assets/icons/sprout.png")}
-            style={styles.logoImage}
-          />
-        </View>
-        <Text style={styles.pageTitle}>Оберіть культури</Text>
-        <FlatList
-          data={dummyCategories}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.item,
-                selected.includes(item.id) && styles.itemSelected,
-              ]}
-              onPress={() => toggleCategory(item.id)}
-            >
-              <Text style={styles.text}>{item.name}</Text>
-              <Pressable onPress={() => openInfo(item.examples)}>
-                <Ionicons name="help-circle-outline" size={22} color="#888" />
-              </Pressable>
-            </TouchableOpacity>
-          )}
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <BackButton style={styles.backButton} />
+        <Text style={styles.prevPageTitle}>Налаштування теплиці</Text>
+        <Image
+          source={require("D:/Vodnic/GrowGuard/assets/icons/sprout.png")}
+          style={styles.logoImage}
         />
+      </View>
+      <Text style={styles.pageTitle}>Оберіть культури</Text>
 
+      <FlatList
+        data={categories}
+        keyExtractor={(item) => item.category}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[
+              styles.item,
+              selected.includes(item.category) && styles.itemSelected,
+            ]}
+            onPress={() => toggleCategory(item.category)}
+          >
+            <Text style={styles.text}>{item.category}</Text>
+            <Pressable onPress={() => openInfo(item.exampleNames.join(", "))}>
+              <Ionicons name="help-circle-outline" size={22} color="#888" />
+            </Pressable>
+          </TouchableOpacity>
+        )}
+      />
+      <Modal
+        animationType="fade"
+        transparent
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setModalVisible(false)}
+        >
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>{modalText}</Text>
+          </View>
+        </Pressable>
+      </Modal>
+      <View style={styles.bottomPart}>
+        {errorMessage && <Text style={styles.errorText}>{errorMessage}</Text>}
         {selected.length >= 3 && (
           <Text style={styles.limitText}>Ви обрали максимум (3) культур</Text>
         )}
+        <TouchableOpacity style={styles.button} onPress={handleValidation}>
+          <Text style={styles.buttonText}>Продовжити</Text>
+        </TouchableOpacity>
 
-        <Modal
-          animationType="fade"
-          transparent
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <Pressable
-            style={styles.modalOverlay}
-            onPress={() => setModalVisible(false)}
-          >
-            <View style={styles.modalView}>
-              <Text style={styles.modalText}>{modalText}</Text>
-            </View>
-          </Pressable>
-        </Modal>
-        <View style={styles.bottomPart}>
-          <TouchableOpacity style={styles.button} onPress={handleNext}>
-            <Text style={styles.buttonText}>Продовжити</Text>
-          </TouchableOpacity>
-
-          {/* Індикатори сторінок */}
-          <View style={styles.dots}>
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-            <View style={styles.activeDot} />
-          </View>
+        {/* Індикатори сторінок */}
+        <View style={styles.dots}>
+          <View style={styles.dot} />
+          <View style={styles.dot} />
+          <View style={styles.activeDot} />
         </View>
-        </View>
-      
+      </View>
+    </View>
   );
 }
-
 const styles = StyleSheet.create({
   backButton: {
     left: -15,
@@ -146,15 +150,15 @@ const styles = StyleSheet.create({
     height: 24,
     marginTop: 4,
   },
-  pageTitle:{
-    fontSize:26,
-    textAlign:"center",
-    marginBottom:20,
+  pageTitle: {
+    fontSize: 26,
+    textAlign: "center",
+    marginBottom: 15,
     fontWeight: "500",
   },
-  prevPageTitle:{
-    fontSize:18,
-    color:"#4B382F",
+  prevPageTitle: {
+    fontSize: 18,
+    color: "#4B382F",
     left: -15,
   },
   item: {
@@ -208,10 +212,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   dots: {
-    top:-20,
+    top: -20,
     flexDirection: "row",
     justifyContent: "center",
     gap: 20,
+    marginTop: 60,
   },
   dot: {
     width: 12,
@@ -226,9 +231,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#A4D490",
   },
   bottomPart: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    height: "25%",
+    position: "absolute",
+    bottom: 20,
+    left: 34,
+    right: 34,
+  },
+  errorText: {
+    color: "#D9534F",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 25,
+
   },
 });

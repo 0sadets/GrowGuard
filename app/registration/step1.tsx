@@ -12,8 +12,6 @@ import {
   View,
 } from "react-native";
 
-import { registerUser } from "@/lib/api";
-
 export default function StepOne() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -25,16 +23,56 @@ export default function StepOne() {
   const [passwordFocused, setPasswordFocused] = useState(false);
   const [passwordFocusedColor, setPasswordFocusedColor] = useState(false);
 
-  const handleNext = async () => {
-    try {
-      console.log("Запит на реєстрацію...");
-      const result = await registerUser(username, email, password);
-      console.log("Успішна реєстрація:", result);
-      router.push("/registration/step2");
-    } catch (err) {
-      console.error("Помилка при реєстрації:", err);
-      alert("Не вдалося зареєструватися. Перевірте дані.");
+  const [errors, setErrors] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+
+  const validate = () => {
+    let valid = true;
+    let newErrors = { username: "", email: "", password: "" };
+
+    if (!username.trim()) {
+      newErrors.username = "Ім'я користувача є обов’язковим.";
+      valid = false;
+    } else if (username.length < 3) {
+      newErrors.username = "Ім'я має містити щонайменше 3 символи.";
+      valid = false;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      newErrors.email = "Email є обов’язковим.";
+      valid = false;
+    } else if (!emailRegex.test(email)) {
+      newErrors.email = "Некоректний формат email.";
+      valid = false;
+    }
+
+    if (!password.trim()) {
+      newErrors.password = "Пароль є обов’язковим.";
+      valid = false;
+    } else if (password.length < 6) {
+      newErrors.password = "Пароль має містити щонайменше 6 символів.";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+  const handleNext = async () => {
+    if (!validate()) return;
+    router.push("/registration/step2");
+    // try {
+    //   console.log("Запит на реєстрацію...");
+    //   const result = await registerUser(username, email, password);
+    //   console.log("Успішна реєстрація:", result);
+    //   router.push("/registration/step2");
+    // } catch (err) {
+    //   console.error("Помилка при реєстрації:", err);
+    //   alert("Не вдалося зареєструватися. Перевірте дані.");
+    // }
   };
 
   return (
@@ -43,10 +81,11 @@ export default function StepOne() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 150 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* шапка */}
         <View style={styles.header}>
           <View></View>
           <Text style={styles.logoText}>GrowGuard</Text>
@@ -59,6 +98,7 @@ export default function StepOne() {
         <Text style={styles.title}>Створення акаунту</Text>
         <View>
           <View style={styles.inputContainre}>
+            {/* імя */}
             <Text style={styles.inputLabel}>Ім'я користувача</Text>
             <TextInput
               style={[styles.input, usernameFocused && styles.inputFocused]}
@@ -69,9 +109,13 @@ export default function StepOne() {
               value={username}
               onChangeText={setUsername}
             />
+            {errors.username ? (
+              <Text style={styles.errorText}>{errors.username}</Text>
+            ) : null}
           </View>
 
           <View style={styles.inputContainre}>
+            {/* еmail */}
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
               style={[styles.input, emailFocused && styles.inputFocused]}
@@ -83,8 +127,12 @@ export default function StepOne() {
               value={email}
               onChangeText={setEmail}
             />
+            {errors.email ? (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            ) : null}
           </View>
           <View style={styles.inputContainre}>
+            {/* пароль */}
             <Text style={styles.inputLabel}>Пароль</Text>
             <View style={styles.passwordContainer}>
               <TextInput
@@ -111,6 +159,9 @@ export default function StepOne() {
                 />
               </TouchableOpacity>
             </View>
+            {errors.password ? (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -196,7 +247,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderColor: "#ddd",
     borderRadius: 10,
-    marginBottom: 24,
+    marginBottom: 10,
     position: "relative",
   },
   eyeIcon: {
@@ -214,7 +265,8 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     alignItems: "center",
-    marginTop: 40,
+    // marginTop: 40,
+    width:"100%"
   },
   buttonText: {
     color: "#fff",
@@ -226,6 +278,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 20,
     // top: -40,
+    marginTop: 60,
   },
   dot: {
     width: 12,
@@ -240,9 +293,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#A4D490",
   },
   bottomPart: {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    height: "25%",
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
+    
+  },
+
+  errorText: {
+    color: "#D9534F",
+    marginTop: 4,
+    fontSize: 13,
   },
 });

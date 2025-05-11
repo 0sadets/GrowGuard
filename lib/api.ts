@@ -18,3 +18,13 @@ export const registerUser = async (username: string, email: string, password: st
     }
   };
   
+export const plantWithExamples = async()=>{
+  try{
+    const response = await axios.get(`${API_BASE_URL}/Plant/categories-with-examples`);
+    return response.data;
+  }
+  catch (error: any) {
+    console.error("Error fetching plants:", error.response?.data);
+    throw error.response?.data || error.message;
+  }
+}
