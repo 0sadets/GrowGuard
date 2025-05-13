@@ -1,5 +1,6 @@
 import { router } from "expo-router";
 import { useState } from "react";
+import { registerUser } from "@/lib/api";
 import {
   Image,
   KeyboardAvoidingView,
@@ -63,16 +64,16 @@ export default function StepOne() {
   };
   const handleNext = async () => {
     if (!validate()) return;
-    router.push("/registration/step2");
-    // try {
-    //   console.log("Запит на реєстрацію...");
-    //   const result = await registerUser(username, email, password);
-    //   console.log("Успішна реєстрація:", result);
-    //   router.push("/registration/step2");
-    // } catch (err) {
-    //   console.error("Помилка при реєстрації:", err);
-    //   alert("Не вдалося зареєструватися. Перевірте дані.");
-    // }
+    //router.push("/registration/step2");
+    try {
+      console.log("Запит на реєстрацію...");
+      const result = await registerUser(username, email, password);
+      console.log("Успішна реєстрація:", result);
+      router.push("/registration/step2");
+    } catch (err) {
+      console.error("Помилка при реєстрації:", err);
+      alert("Не вдалося зареєструватися. Перевірте дані.");
+    }
   };
 
   return (

@@ -1,8 +1,14 @@
 import BackButton from "@/components/BackButton";
-import { plantWithExamples } from "@/lib/api";
+import { createGreenhouse, plantWithExamples } from "@/lib/api";
+import {
+  clearGreenhouseData,
+  getGreenhouseData,
+} from "@/lib/greenhouseStorage";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
+
 import {
   FlatList,
   Image,
@@ -28,10 +34,11 @@ export default function SteoThree() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const data = await plantWithExamples(); // Отримуємо дані з API
-        setCategories(data); // Зберігаємо отримані дані в стейт
+        const data = await plantWithExamples();
+        setCategories(data);
       } catch (error) {
         console.error("Помилка при отриманні даних:", error);
+        setErrorMessage("Не вдалося завантажити категорії культур.");
       }
     };
 
@@ -42,12 +49,30 @@ export default function SteoThree() {
     setModalText(examples);
     setModalVisible(true);
   };
-  const handleValidation = () => {
+  const handleValidation = async () => {
     if (selected.length === 0) {
       setErrorMessage("Будь ласка, оберіть хоча б одну категорію культур.");
-    } else {
-      setErrorMessage("");
-      handleNext();
+      return;
+    }
+
+    try {
+      const baseData = await getGreenhouseData();
+      if (!baseData) throw new Error("Дані теплиці не знайдено");
+
+      const token = await AsyncStorage.getItem("auth_token"); 
+      const dto = {
+        ...baseData,
+        plantIds: selected,
+      };
+      console.log("DTO перед відправкою:", dto);
+
+      await createGreenhouse(dto);
+      await clearGreenhouseData();
+
+      router.push("./greenhouse/main");
+    } catch (error) {
+      console.error("Не вдалося створити теплицю:", error);
+      setErrorMessage("Виникла помилка при створенні теплиці");
     }
   };
   const toggleCategory = (id: number) => {
@@ -57,11 +82,11 @@ export default function SteoThree() {
       setSelected((prev) => [...prev, id]);
     }
     if (selected.length === 0) {
-    setErrorMessage(""); 
-  }
+      setErrorMessage("");
+    }
   };
 
-  console.log("Категорії:", categories);
+  // console.log("Категорії:", categories);
 
   return (
     <View style={styles.container}>
@@ -76,23 +101,24 @@ export default function SteoThree() {
       <Text style={styles.pageTitle}>Оберіть культури</Text>
 
       <FlatList
-        data={categories}
-        keyExtractor={(item) => item.category}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[
-              styles.item,
-              selected.includes(item.category) && styles.itemSelected,
-            ]}
-            onPress={() => toggleCategory(item.category)}
-          >
-            <Text style={styles.text}>{item.category}</Text>
-            <Pressable onPress={() => openInfo(item.exampleNames.join(", "))}>
-              <Ionicons name="help-circle-outline" size={22} color="#888" />
-            </Pressable>
-          </TouchableOpacity>
-        )}
-      />
+  data={categories}
+  keyExtractor={(item) => item.id.toString()} 
+  renderItem={({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.item,
+        selected.includes(item.id) && styles.itemSelected,  
+      ]}
+      onPress={() => toggleCategory(item.id)} 
+    >
+      <Text style={styles.text}>{item.category}</Text>
+      <Pressable onPress={() => openInfo(item.exampleNames.join(", "))}>
+        <Ionicons name="help-circle-outline" size={22} color="#888" />
+      </Pressable>
+    </TouchableOpacity>
+  )}
+/>
+
       <Modal
         animationType="fade"
         transparent
@@ -241,6 +267,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     marginTop: 25,
-
   },
 });

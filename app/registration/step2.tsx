@@ -1,6 +1,8 @@
 import { Picker } from "@react-native-picker/picker";
 import { router } from "expo-router";
 import { useState } from "react";
+import { saveGreenhouseData } from "@/lib/greenhouseStorage";
+
 import {
   Image,
   KeyboardAvoidingView,
@@ -73,8 +75,17 @@ export default function StepTwo() {
     return Object.values(newErrors).every((val) => val === "");
   };
 
-  const handleNext = () => {
+const handleNext = async () => {
   if (validateFields()) {
+    
+    await saveGreenhouseData({
+      name,
+      location,
+      season,
+      length: Number(length),
+      width: Number(width),
+      height: Number(height),
+    });
     router.push("/registration/step3");
   }
 };
