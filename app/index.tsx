@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
-
+import { Provider as PaperProvider } from 'react-native-paper';
 export default function SplashScreen() {
   const navigation = useNavigation<any>();
   const scaleAnim = useRef(new Animated.Value(0.8)).current;

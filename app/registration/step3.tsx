@@ -69,7 +69,7 @@ export default function SteoThree() {
       await createGreenhouse(dto);
       await clearGreenhouseData();
 
-      router.push("./greenhouse/main");
+      router.push("/greenhouse/main");
     } catch (error) {
       console.error("Не вдалося створити теплицю:", error);
       setErrorMessage("Виникла помилка при створенні теплиці");
@@ -189,8 +189,8 @@ const styles = StyleSheet.create({
   },
   item: {
     backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderWidth: 1,
+    borderColor: "#eee",
     paddingVertical: 15,
     paddingHorizontal: 10,
     flexDirection: "row",

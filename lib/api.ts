@@ -1,7 +1,8 @@
 // lib/api.ts
-import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from "axios";
 const API_BASE_URL = "http://192.168.1.101:5004/api"; 
+// const API_BASE_URL = "http://192.168.42.22:5004/api"; 
 
 export const registerUser = async (username: string, email: string, password: string) => {
   try {
@@ -25,6 +26,22 @@ export const registerUser = async (username: string, email: string, password: st
   }
 };
   
+export const loginUser = async(username: string, password: string)=>{
+  try{
+    const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
+      userName: username,
+      password,
+    });
+    const { accessToken, refreshToken } = response.data;
+    await AsyncStorage.setItem("auth_token", accessToken);
+    await AsyncStorage.setItem("refresh_token", refreshToken);
+
+    return { accessToken, refreshToken };
+  } catch (error: any) {
+    console.error("Login error:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};
 export const plantWithExamples = async()=>{
   try{
     const response = await axios.get(`${API_BASE_URL}/Plant/categories-with-examples`);

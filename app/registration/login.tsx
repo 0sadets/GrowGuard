@@ -1,4 +1,3 @@
-import { registerUser } from "@/lib/api";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -12,72 +11,59 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import BackButton from "D:/Vodnic/GrowGuard/components/BackButton";
+import { loginUser } from "@/lib/api"; 
 
-export default function StepOne() {
+export default function Login() {
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const [usernameFocused, setUsernameFocused] = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
-  const [passwordFocusedColor, setPasswordFocusedColor] = useState(false);
 
   const [errors, setErrors] = useState({
     username: "",
-    email: "",
     password: "",
   });
 
   const validate = () => {
     let valid = true;
-    let newErrors = { username: "", email: "", password: "" };
+    let newErrors = { username: "", password: "" };
 
     if (!username.trim()) {
       newErrors.username = "Ім'я користувача є обов’язковим.";
-      valid = false;
-    } else if (username.length < 3) {
-      newErrors.username = "Ім'я має містити щонайменше 3 символи.";
-      valid = false;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
-      newErrors.email = "Email є обов’язковим.";
-      valid = false;
-    } else if (!emailRegex.test(email)) {
-      newErrors.email = "Некоректний формат email.";
       valid = false;
     }
 
     if (!password.trim()) {
       newErrors.password = "Пароль є обов’язковим.";
       valid = false;
-    } else if (password.length < 6) {
-      newErrors.password = "Пароль має містити щонайменше 6 символів.";
-      valid = false;
     }
 
     setErrors(newErrors);
     return valid;
   };
-  const handleLogin = async () => {
-    router.push("/registration/login");
-  };
+
   const handleNext = async () => {
-    if (!validate()) return;
-    //router.push("/registration/step2");
-    try {
-      console.log("Запит на реєстрацію...");
-      const result = await registerUser(username, email, password);
-      console.log("Успішна реєстрація:", result);
-      router.push("/registration/step2");
-    } catch (err) {
-      console.error("Помилка при реєстрації:", err);
-      alert("Не вдалося зареєструватися. Перевірте дані.");
-    }
-  };
+  if (!validate()) return;
+
+  try {
+    console.log("Спроба входу...");
+
+    // виклик API
+    const { accessToken, refreshToken } = await loginUser(username, password);
+    
+    console.log("Успішний вхід:", accessToken);
+
+    // Перехід до головної сторінки теплиці
+    router.push("/greenhouse/main");
+  } catch (error) {
+    console.error("Помилка входу:", error);
+    alert("Не вдалося увійти. Перевірте ім'я користувача або пароль.");
+  }
+};
+
 
   return (
     <KeyboardAvoidingView
@@ -85,13 +71,14 @@ export default function StepOne() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 180 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 150 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {/* шапка */}
+        
         <View style={styles.header}>
-          <View></View>
+          <BackButton style={styles.backButton} />
           <Text style={styles.logoText}>GrowGuard</Text>
           <Image
             source={require("D:/Vodnic/GrowGuard/assets/icons/sprout.png")}
@@ -99,9 +86,9 @@ export default function StepOne() {
           />
         </View>
 
-        <Text style={styles.title}>Створення акаунту</Text>
-        <View>
-          <View style={styles.inputContainre}>
+        <Text style={styles.title}>Вхід в акаунт</Text>
+        <View style={styles.inputContainre}>
+          <View >
             {/* імя */}
             <Text style={styles.inputLabel}>Ім'я користувача</Text>
             <TextInput
@@ -118,24 +105,7 @@ export default function StepOne() {
             ) : null}
           </View>
 
-          <View style={styles.inputContainre}>
-            {/* еmail */}
-            <Text style={styles.inputLabel}>Email</Text>
-            <TextInput
-              style={[styles.input, emailFocused && styles.inputFocused]}
-              onFocus={() => setEmailFocused(true)}
-              onBlur={() => setEmailFocused(false)}
-              placeholder="Ваш email"
-              placeholderTextColor="#999"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
-            {errors.email ? (
-              <Text style={styles.errorText}>{errors.email}</Text>
-            ) : null}
-          </View>
-          <View style={styles.inputContainre}>
+          <View >
             {/* пароль */}
             <Text style={styles.inputLabel}>Пароль</Text>
             <View style={styles.passwordContainer}>
@@ -171,18 +141,8 @@ export default function StepOne() {
 
         <View style={styles.bottomPart}>
           <TouchableOpacity style={styles.button} onPress={handleNext}>
-            <Text style={styles.buttonText}>Створити акаунт</Text>
+            <Text style={styles.buttonText}>Увійти</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogin}>
-            <Text style={styles.linkText}>Вже маєте акаунт? Увійти</Text>
-          </TouchableOpacity>
-
-          {/* Індикатори сторінок */}
-          <View style={styles.dots}>
-            <View style={styles.activeDot} />
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -197,15 +157,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     justifyContent: "space-between",
   },
-  header: {
+   header: {
     alignItems: "center",
-    marginBottom: 50,
+    marginBottom: 5,
     display: "flex",
     flexDirection: "row",
-    justifyContent: "center",
-    borderBottomColor: "#4C6E45",
-    borderBottomWidth: 1,
-    paddingBottom: 8,
+    justifyContent: "space-between",
+  },
+  backButton: {
+    left: -15,
   },
   logoText: {
     fontSize: 16,
@@ -223,7 +183,8 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "600",
     textAlign: "center",
-    marginBottom: 60,
+    marginBottom: 40,
+    marginTop: 80,
     color: "#423a3a",
   },
   input: {
@@ -235,7 +196,10 @@ const styles = StyleSheet.create({
     // marginBottom: 16,
     width: "100%",
   },
-  inputContainre: {},
+  inputContainre: {
+    alignSelf:"center",
+    marginTop:30
+  },
   inputLabel: {
     fontSize: 16,
     marginBottom: 5,
@@ -272,7 +236,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 12,
     alignItems: "center",
-    marginBottom: 10,
+    // marginTop: 40,
     width: "100%",
   },
   buttonText: {
@@ -301,21 +265,13 @@ const styles = StyleSheet.create({
   },
   bottomPart: {
     position: "absolute",
-    bottom: 20,
+    bottom: 100,
     left: 0,
     right: 0,
   },
-
   errorText: {
     color: "#D9534F",
     marginTop: 4,
     fontSize: 13,
-  },
-  linkText: {
-    color: "#595251",
-    fontSize: 16,
-    fontStyle: "italic",
-    textAlign:"center",
-    marginTop:4
   },
 });
