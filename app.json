@@ -4,16 +4,13 @@
     "slug": "GrowGuard",
     "version": "1.0.0",
     "orientation": "portrait",
-    
     "scheme": "growguard",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    
     "ios": {
       "supportsTablet": true
     },
     "android": {
-      
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -26,12 +23,12 @@
       [
         "expo-splash-screen",
         {
-          
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

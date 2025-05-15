@@ -69,7 +69,7 @@ export default function SteoThree() {
       await createGreenhouse(dto);
       await clearGreenhouseData();
 
-      router.push("/greenhouse/main");
+      router.push("/(tabs)/main");
     } catch (error) {
       console.error("Не вдалося створити теплицю:", error);
       setErrorMessage("Виникла помилка при створенні теплиці");

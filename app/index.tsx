@@ -1,11 +1,12 @@
+// app/index.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
-import { useEffect, useRef } from "react";
+import { router } from "expo-router";
+import { useEffect, useRef, useState } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
-import { Provider as PaperProvider } from 'react-native-paper';
+
 export default function SplashScreen() {
-  const navigation = useNavigation<any>();
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const [animationDone, setAnimationDone] = useState(false);
 
   useEffect(() => {
     Animated.sequence([
@@ -21,24 +22,23 @@ export default function SplashScreen() {
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }),
-    ]).start();
-    const checkLoginStatus = async () => {
-      try {
-        const token = await AsyncStorage.getItem("authToken");
-        setTimeout(() => {
-          if (token) {
-            navigation.replace("Home");
-          } else {
-            navigation.replace("registration/step1");
-          }
-        }, 2500);
-      } catch (error) {
-        console.error("Login check failed", error);
-        navigation.replace("registration/step1");
+    ]).start(() => setAnimationDone(true));
+  }, []);
+
+  useEffect(() => {
+    const navigateAfterDelay = async () => {
+      // Почекати ~2.5 секунди, поки анімація іде
+      await new Promise((res) => setTimeout(res, 2500));
+
+      const token = await AsyncStorage.getItem("auth_token"); // слідкуй за точним ключем
+      if (token) {
+        router.replace("/(tabs)/main");
+      } else {
+        router.replace("/registration/step1");
       }
     };
 
-    checkLoginStatus();
+    navigateAfterDelay();
   }, []);
 
   return (
