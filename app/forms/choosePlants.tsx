@@ -20,6 +20,9 @@ import {
   View,
 } from "react-native";
 
+const handleNext = () => {
+  router.push("/registration/step3");
+};
 
 export default function SteoThree() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -139,13 +142,6 @@ export default function SteoThree() {
         <TouchableOpacity style={styles.button} onPress={handleValidation}>
           <Text style={styles.buttonText}>Продовжити</Text>
         </TouchableOpacity>
-
-        {/* Індикатори сторінок */}
-        <View style={styles.dots}>
-          <View style={styles.dot} />
-          <View style={styles.dot} />
-          <View style={styles.activeDot} />
-        </View>
       </View>
     </View>
   );
@@ -234,19 +230,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  dots: {
-    top: -20,
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 20,
-    marginTop: 60,
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#E0F0D9",
-  },
+ 
   activeDot: {
     width: 12,
     height: 12,

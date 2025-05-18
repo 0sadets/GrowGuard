@@ -75,3 +75,45 @@ export const createGreenhouse = async (dto: any) => {
     throw error.response?.data || error.message;
   }
 };
+
+
+export const getGreenhouseStatus = async (greenhouseId: number) => {
+  try {
+    const token = await AsyncStorage.getItem("auth_token");
+    if (!token) throw new Error("Користувач не авторизований.");
+
+    const response = await axios.post(
+      `${API_BASE_URL}/Greenhouse/status`,
+      greenhouseId,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Помилка при отриманні статусу теплиці:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};
+
+export const getUserGreenhouses = async () => {
+  try {
+    const token = await AsyncStorage.getItem("auth_token");
+    if (!token) throw new Error("Користувач не авторизований.");
+
+    const response = await axios.get(`${API_BASE_URL}/Greenhouse/user-greenhouses`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data; // масив теплиць
+  } catch (error: any) {
+    console.error("Помилка при отриманні теплиць:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};

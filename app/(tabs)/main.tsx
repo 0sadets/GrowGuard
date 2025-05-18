@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FlatList,
   Image,
@@ -13,17 +13,15 @@ import {
   View,
 } from "react-native";
 import { Menu } from "react-native-paper";
+
+import { getGreenhouseStatus, getUserGreenhouses } from "@/lib/api";
+import { router } from "expo-router";
+
 type Greenhouse = {
-  id: string;
+  id: number;
   name: string;
   status: "good" | "warning" | "error";
 };
-
-const dummyData: Greenhouse[] = [
-  { id: "1", name: "назва_теплиці", status: "good" },
-  { id: "2", name: "назва_теплиці", status: "warning" },
-  { id: "3", name: "назва_теплиці", status: "error" },
-];
 
 const getStatusColor = (status: Greenhouse["status"]) => {
   switch (status) {
@@ -39,6 +37,8 @@ const getStatusColor = (status: Greenhouse["status"]) => {
 };
 
 export default function MainScreen() {
+  const [greenhouses, setGreenhouses] = useState<Greenhouse[]>([]);
+  const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
 
   const openMenu = () => setVisible(true);
@@ -51,6 +51,44 @@ export default function MainScreen() {
   if (!fontsLoaded) {
     return <Text>Завантаження шрифтів...</Text>;
   }
+
+  const handleCreate = async () =>{
+    router.push("../forms/createGreenhouse");
+  }
+  useEffect(() => {
+    const fetchGreenhousesWithStatus = async () => {
+      try {
+        const ghList = await getUserGreenhouses(); 
+
+        const fullList = await Promise.all(
+          ghList.map(async (gh: any) => {
+            let status: "good" | "warning" | "error" = "good";
+            try {
+              const result = await getGreenhouseStatus(gh.id);
+              status = result.status;
+            } catch (e) {
+              console.warn("Помилка статусу для теплиці", gh.id);
+              status = "error";
+            }
+
+            return {
+              id: gh.id,
+              name: gh.name,
+              status,
+            };
+          })
+        );
+
+        setGreenhouses(fullList);
+      } catch (error) {
+        console.error("Не вдалося отримати теплиці", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGreenhousesWithStatus();
+  }, []);
 
   const renderItem = ({ item }: { item: Greenhouse }) => (
     <TouchableOpacity style={styles.item}>
@@ -90,7 +128,11 @@ export default function MainScreen() {
             <Menu
               visible={visible}
               onDismiss={closeMenu}
-              contentStyle={{ backgroundColor: "#fcfcfc", borderRadius: 15, paddingVertical:0 }}
+              contentStyle={{
+                backgroundColor: "#fcfcfc",
+                borderRadius: 15,
+                paddingVertical: 0,
+              }}
               anchor={
                 <TouchableOpacity onPress={openMenu}>
                   <Ionicons
@@ -109,14 +151,14 @@ export default function MainScreen() {
         <Text style={styles.title}>Мої теплиці</Text>
 
         <FlatList
-          data={dummyData}
+          data={greenhouses}
           renderItem={renderItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
         />
 
-        <TouchableOpacity style={styles.addButton} onPress={() => {}}>
+        <TouchableOpacity style={styles.addButton} onPress={handleCreate}>
           <Ionicons name="add" size={36} color="white" />
         </TouchableOpacity>
       </SafeAreaView>
@@ -166,27 +208,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     width: "50%",
     alignItems: "center",
-    paddingLeft: 10
+    paddingLeft: 10,
   },
   list: {
     paddingBottom: 100,
   },
-item: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: "#fefefe",
-  borderRadius: 12,
-  padding: 15,
-  marginBottom: 12,
-  borderWidth: 0.3, 
-  borderColor: "#ddd", 
+  item: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fefefe",
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 12,
+    borderWidth: 0.3,
+    borderColor: "#ddd",
 
-  shadowColor: "#000",
-  shadowOpacity: 0.01,
-  shadowOffset: { width: 0, height: 1 },
-  shadowRadius: 2,
-  elevation: 1,
-},
+    shadowColor: "#000",
+    shadowOpacity: 0.01,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
+  },
 
   statusDot: {
     width: 12,
