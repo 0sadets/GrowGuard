@@ -84,7 +84,7 @@ export const getGreenhouseStatus = async (greenhouseId: number) => {
 
     const response = await axios.post(
       `${API_BASE_URL}/Greenhouse/status`,
-      greenhouseId,
+       greenhouseId , // <-- обгорнули у JSON-об’єкт
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -95,10 +95,15 @@ export const getGreenhouseStatus = async (greenhouseId: number) => {
 
     return response.data;
   } catch (error: any) {
-    console.error("Помилка при отриманні статусу теплиці:", error.response?.data || error.message);
+    console.error(
+      "Помилка при отриманні статусу теплиці:",
+      error.response?.data || error.message
+    );
     throw error.response?.data || error.message;
   }
 };
+
+
 
 export const getUserGreenhouses = async () => {
   try {
@@ -114,6 +119,23 @@ export const getUserGreenhouses = async () => {
     return response.data; // масив теплиць
   } catch (error: any) {
     console.error("Помилка при отриманні теплиць:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};
+export const getGreenhouseById = async (id: number) => {
+  try {
+    const token = await AsyncStorage.getItem("auth_token");
+    if (!token) throw new Error("Користувач не авторизований.");
+
+    const response = await axios.get(`${API_BASE_URL}/Greenhouse/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (error: any) {
+    console.error("Помилка при отриманні деталей теплиці:", error.response?.data || error.message);
     throw error.response?.data || error.message;
   }
 };

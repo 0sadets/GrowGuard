@@ -1,6 +1,10 @@
+import { getGreenhouseStatus, getUserGreenhouses } from "@/lib/api";
+import { useSignalR } from "@/lib/SignalRProvider";
+
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import React, { useEffect, useState } from "react";
+import { router } from "expo-router";
+import React, { useEffect, useState, useRef } from "react";
 import {
   FlatList,
   Image,
@@ -14,13 +18,10 @@ import {
 } from "react-native";
 import { Menu } from "react-native-paper";
 
-import { getGreenhouseStatus, getUserGreenhouses } from "@/lib/api";
-import { router } from "expo-router";
-
 type Greenhouse = {
   id: number;
   name: string;
-  status: "good" | "warning" | "error";
+  status: "good" | "warning" | "error" | "loading";
 };
 
 const getStatusColor = (status: Greenhouse["status"]) => {
@@ -37,61 +38,168 @@ const getStatusColor = (status: Greenhouse["status"]) => {
 };
 
 export default function MainScreen() {
+  const { connection } = useSignalR();
   const [greenhouses, setGreenhouses] = useState<Greenhouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
+  const joinedGroupsRef = useRef<Set<number>>(new Set());
 
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
+
   const [fontsLoaded] = useFonts({
     "Nunito-Bold": require("../../assets/fonts/Nunito-Bold.ttf"),
     "Nunito-Italic": require("../../assets/fonts/Nunito-Italic.ttf"),
   });
 
-  if (!fontsLoaded) {
-    return <Text>Завантаження шрифтів...</Text>;
-  }
-
-  const handleCreate = async () =>{
+  const handleCreate = () => {
     router.push("../forms/createGreenhouse");
-  }
+  };
+
   useEffect(() => {
-    const fetchGreenhousesWithStatus = async () => {
+    let isMounted = true;
+
+    async function fetchGreenhouses() {
       try {
-        const ghList = await getUserGreenhouses(); 
+        const ghList = await getUserGreenhouses();
 
-        const fullList = await Promise.all(
-          ghList.map(async (gh: any) => {
-            let status: "good" | "warning" | "error" = "good";
-            try {
-              const result = await getGreenhouseStatus(gh.id);
-              status = result.status;
-            } catch (e) {
-              console.warn("Помилка статусу для теплиці", gh.id);
-              status = "error";
-            }
+        if (!isMounted) return;
 
-            return {
-              id: gh.id,
-              name: gh.name,
-              status,
-            };
-          })
+        setGreenhouses(
+          ghList.map((gh: any) => ({
+            id: gh.id,
+            name: gh.name,
+            status: "loading" as Greenhouse["status"],
+          }))
         );
+        setLoading(false);
 
-        setGreenhouses(fullList);
+        for (const gh of ghList) {
+          try {
+            const result = await getGreenhouseStatus(gh.id);
+            if (!isMounted) return;
+            setGreenhouses((prev) =>
+              prev.map((item) =>
+                item.id === gh.id ? { ...item, status: result.status } : item
+              )
+            );
+          } catch {
+            if (!isMounted) return;
+            setGreenhouses((prev) =>
+              prev.map((item) =>
+                item.id === gh.id ? { ...item, status: "error" } : item
+              )
+            );
+          }
+        }
       } catch (error) {
         console.error("Не вдалося отримати теплиці", error);
-      } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
-    };
+    }
 
-    fetchGreenhousesWithStatus();
+    fetchGreenhouses();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
+  // Підписка на оновлення статусів SignalR
+  useEffect(() => {
+    if (!connection) return;
+
+    const handleStatusUpdate = (statusDto: {
+      greenhouseId: number;
+      status: Greenhouse["status"];
+    }) => {
+      console.log("Отримано оновлення статусу:", statusDto);
+      setGreenhouses((prev) =>
+        prev.map((gh) =>
+          gh.id === statusDto.greenhouseId
+            ? { ...gh, status: statusDto.status }
+            : gh
+        )
+      );
+    };
+
+    connection.on("GreenhouseStatusUpdated", handleStatusUpdate);
+
+    return () => {
+      connection.off("GreenhouseStatusUpdated", handleStatusUpdate);
+    };
+  }, [connection]);
+
+  // Функція для приєднання до груп
+  async function joinGroups(greenhouses: Greenhouse[]) {
+    if (!connection) return;
+
+    for (const gh of greenhouses) {
+      if (!joinedGroupsRef.current.has(gh.id)) {
+        try {
+          await connection.invoke("JoinGroup", gh.id.toString());
+          joinedGroupsRef.current.add(gh.id);
+          console.log(`Приєднано до групи: ${gh.id}`);
+        } catch (err) {
+          console.warn("Помилка приєднання до групи:", err);
+        }
+      }
+    }
+  }
+
+  // Join groups
+  useEffect(() => {
+    if (!connection || greenhouses.length === 0) return;
+
+    // Якщо зєднання не готове - чекаємо
+    if (connection.state !== "Connected") {
+      const onConnected = async () => {
+        await joinGroups(greenhouses);
+        await refreshStatuses(greenhouses);
+        connection.off("reconnected", onConnected);
+      };
+      connection.on("reconnected", onConnected);
+      return () => {
+        connection.off("reconnected", onConnected);
+      };
+    } else {
+      // Якщо вже підключено - одразу join та оновлення статусів
+      (async () => {
+        await joinGroups(greenhouses);
+        await refreshStatuses(greenhouses);
+      })();
+    }
+
+    async function refreshStatuses(greenhouses: Greenhouse[]) {
+      for (const gh of greenhouses) {
+        try {
+          const result = await getGreenhouseStatus(gh.id);
+          setGreenhouses((prev) =>
+            prev.map((item) =>
+              item.id === gh.id ? { ...item, status: result.status } : item
+            )
+          );
+        } catch {
+          setGreenhouses((prev) =>
+            prev.map((item) =>
+              item.id === gh.id ? { ...item, status: "error" } : item
+            )
+          );
+        }
+      }
+    }
+  }, [connection, greenhouses]);
+
   const renderItem = ({ item }: { item: Greenhouse }) => (
-    <TouchableOpacity style={styles.item}>
+    <TouchableOpacity
+      style={styles.item}
+      onPress={() =>
+        router.push({
+          pathname: "../greenhouse/gh_details",
+          params: { id: item.id },
+        })
+      }
+    >
       <View
         style={[
           styles.statusDot,
@@ -102,6 +210,10 @@ export default function MainScreen() {
       <Ionicons name="chevron-forward" size={20} color="#4C6E45" />
     </TouchableOpacity>
   );
+
+  if (!fontsLoaded) {
+    return <Text>Завантаження шрифтів...</Text>;
+  }
 
   return (
     <KeyboardAvoidingView
@@ -152,10 +264,31 @@ export default function MainScreen() {
 
         <FlatList
           data={greenhouses}
-          renderItem={renderItem}
           keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
+          renderItem={renderItem}
+          refreshing={loading}
+          onRefresh={() => {
+            // Рефреш списку
+            setLoading(true);
+            setGreenhouses([]);
+            joinedGroupsRef.current.clear(); // очищаємо щоб знову приєднатись
+            //  повторне завантаження
+            (async () => {
+              try {
+                const ghList = await getUserGreenhouses();
+                setGreenhouses(
+                  ghList.map((gh: any) => ({
+                    id: gh.id,
+                    name: gh.name,
+                    status: "loading",
+                  }))
+                );
+                setLoading(false);
+              } catch {
+                setLoading(false);
+              }
+            })();
+          }}
         />
 
         <TouchableOpacity style={styles.addButton} onPress={handleCreate}>
