@@ -1,4 +1,4 @@
-import { SignalRProvider } from "@/lib/SignalRProvider";
+// import { SignalRProvider } from "@/lib/SignalRProvider";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
@@ -21,9 +21,9 @@ export default function RootLayout() {
 
   return (
     <PaperProvider>
-      <SignalRProvider>
+      {/* <SignalRProvider> */}
         <Slot />
-      </SignalRProvider>
+      {/* </SignalRProvider> */}
     </PaperProvider>
   );
 }

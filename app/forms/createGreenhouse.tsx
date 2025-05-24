@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 34,
-    paddingTop: 5,
+    paddingTop: 30,
     backgroundColor: "#fff",
     justifyContent: "space-between",
   },
@@ -295,10 +295,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#A4D490",
   },
   bottomPart: {
-    position: "absolute",
-    bottom: 20,
-    left: 0,
-    right: 0,
+    // position: "absolute",
+    // bottom: 50,
+    // left: 0,
+    // right: 0,
   },
   inputContainre: {
     display: "flex",

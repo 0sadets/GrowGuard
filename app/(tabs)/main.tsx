@@ -1,12 +1,11 @@
-import { getGreenhouseStatus, getUserGreenhouses } from "@/lib/api";
-import { useSignalR } from "@/lib/SignalRProvider";
-
+import GreenhouseItem from "@/components/GreenhouseItem";
+import { useGreenhouseSignalR } from "@/hooks/useGreenhouseSignalR";
+import { getGreenhouseIdBySerialNumber } from "@/lib/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { router } from "expo-router";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  FlatList,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -18,32 +17,30 @@ import {
 } from "react-native";
 import { Menu } from "react-native-paper";
 
-type Greenhouse = {
-  id: number;
-  name: string;
-  status: "good" | "warning" | "error" | "loading";
-};
 
-const getStatusColor = (status: Greenhouse["status"]) => {
-  switch (status) {
-    case "good":
-      return "#9be68d";
-    case "warning":
-      return "#f3d498";
-    case "error":
-      return "#f29d9d";
-    default:
-      return "gray";
-  }
-};
-
+const SERIAL_NUMBER = "ARDUINO-001";
 export default function MainScreen() {
-  const { connection } = useSignalR();
-  const [greenhouses, setGreenhouses] = useState<Greenhouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
-  const joinedGroupsRef = useRef<Set<number>>(new Set());
+  const [connectedGreenhouseId, setConnectedGreenhouseId] = useState<
+    number | null
+  >(null);
+  const [connectedStatus, setConnectedStatus] = useState("nodata");
 
+  useEffect(() => {
+    const fetchGreenhouseId = async () => {
+      try {
+        const id = await getGreenhouseIdBySerialNumber(SERIAL_NUMBER);
+        setConnectedGreenhouseId(id);
+        console.log("🔗 Теплиця, підключена до пристрою:", id);
+      } catch (error) {
+        console.log("⚠️ Пристрій не підключено до жодної теплиці");
+      }
+    };
+
+    fetchGreenhouseId();
+  }, []);
+  useGreenhouseSignalR(connectedGreenhouseId, setConnectedStatus);
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
 
@@ -51,165 +48,23 @@ export default function MainScreen() {
     "Nunito-Bold": require("../../assets/fonts/Nunito-Bold.ttf"),
     "Nunito-Italic": require("../../assets/fonts/Nunito-Italic.ttf"),
   });
+  // const loadGreenhouses = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const data = await getUserGreenhouses();
+  //     setGreenhouses(data);
+  //   } catch (error) {
+  //     console.error("❌ Не вдалося завантажити теплиці:", error);
+  //   }
+  //   setLoading(false);
+  // };
 
+  // useEffect(() => {
+  //   loadGreenhouses();
+  // }, []);
   const handleCreate = () => {
     router.push("../forms/createGreenhouse");
   };
-
-  useEffect(() => {
-    let isMounted = true;
-
-    async function fetchGreenhouses() {
-      try {
-        const ghList = await getUserGreenhouses();
-
-        if (!isMounted) return;
-
-        setGreenhouses(
-          ghList.map((gh: any) => ({
-            id: gh.id,
-            name: gh.name,
-            status: "loading" as Greenhouse["status"],
-          }))
-        );
-        setLoading(false);
-
-        for (const gh of ghList) {
-          try {
-            const result = await getGreenhouseStatus(gh.id);
-            if (!isMounted) return;
-            setGreenhouses((prev) =>
-              prev.map((item) =>
-                item.id === gh.id ? { ...item, status: result.status } : item
-              )
-            );
-          } catch {
-            if (!isMounted) return;
-            setGreenhouses((prev) =>
-              prev.map((item) =>
-                item.id === gh.id ? { ...item, status: "error" } : item
-              )
-            );
-          }
-        }
-      } catch (error) {
-        console.error("Не вдалося отримати теплиці", error);
-        if (isMounted) setLoading(false);
-      }
-    }
-
-    fetchGreenhouses();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // Підписка на оновлення статусів SignalR
-  useEffect(() => {
-    if (!connection) return;
-
-    const handleStatusUpdate = (statusDto: {
-      greenhouseId: number;
-      status: Greenhouse["status"];
-    }) => {
-      console.log("Отримано оновлення статусу:", statusDto);
-      setGreenhouses((prev) =>
-        prev.map((gh) =>
-          gh.id === statusDto.greenhouseId
-            ? { ...gh, status: statusDto.status }
-            : gh
-        )
-      );
-    };
-
-    connection.on("GreenhouseStatusUpdated", handleStatusUpdate);
-
-    return () => {
-      connection.off("GreenhouseStatusUpdated", handleStatusUpdate);
-    };
-  }, [connection]);
-
-  // Функція для приєднання до груп
-  async function joinGroups(greenhouses: Greenhouse[]) {
-    if (!connection) return;
-
-    for (const gh of greenhouses) {
-      if (!joinedGroupsRef.current.has(gh.id)) {
-        try {
-          await connection.invoke("JoinGroup", gh.id.toString());
-          joinedGroupsRef.current.add(gh.id);
-          console.log(`Приєднано до групи: ${gh.id}`);
-        } catch (err) {
-          console.warn("Помилка приєднання до групи:", err);
-        }
-      }
-    }
-  }
-
-  // Join groups
-  useEffect(() => {
-    if (!connection || greenhouses.length === 0) return;
-
-    // Якщо зєднання не готове - чекаємо
-    if (connection.state !== "Connected") {
-      const onConnected = async () => {
-        await joinGroups(greenhouses);
-        await refreshStatuses(greenhouses);
-        connection.off("reconnected", onConnected);
-      };
-      connection.on("reconnected", onConnected);
-      return () => {
-        connection.off("reconnected", onConnected);
-      };
-    } else {
-      // Якщо вже підключено - одразу join та оновлення статусів
-      (async () => {
-        await joinGroups(greenhouses);
-        await refreshStatuses(greenhouses);
-      })();
-    }
-
-    async function refreshStatuses(greenhouses: Greenhouse[]) {
-      for (const gh of greenhouses) {
-        try {
-          const result = await getGreenhouseStatus(gh.id);
-          setGreenhouses((prev) =>
-            prev.map((item) =>
-              item.id === gh.id ? { ...item, status: result.status } : item
-            )
-          );
-        } catch {
-          setGreenhouses((prev) =>
-            prev.map((item) =>
-              item.id === gh.id ? { ...item, status: "error" } : item
-            )
-          );
-        }
-      }
-    }
-  }, [connection, greenhouses]);
-
-  const renderItem = ({ item }: { item: Greenhouse }) => (
-    <TouchableOpacity
-      style={styles.item}
-      onPress={() =>
-        router.push({
-          pathname: "../greenhouse/gh_details",
-          params: { id: item.id },
-        })
-      }
-    >
-      <View
-        style={[
-          styles.statusDot,
-          { backgroundColor: getStatusColor(item.status) },
-        ]}
-      />
-      <Text style={styles.name}>{item.name}</Text>
-      <Ionicons name="chevron-forward" size={20} color="#4C6E45" />
-    </TouchableOpacity>
-  );
 
   if (!fontsLoaded) {
     return <Text>Завантаження шрифтів...</Text>;
@@ -220,80 +75,72 @@ export default function MainScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <SafeAreaView style={styles.container}>
-        {/* Шапка */}
-        <View style={styles.header}>
-          <View style={styles.headerTitle}>
-            <Image
-              source={require("D:/Vodnic/GrowGuard/assets/icons/sprout.png")}
-              style={styles.logoImage}
-            />
-            <Text style={styles.logoText}>GrowGuard</Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "flex-end",
-              paddingRight: 16,
-            }}
-          >
-            <Menu
-              visible={visible}
-              onDismiss={closeMenu}
-              contentStyle={{
-                backgroundColor: "#fcfcfc",
-                borderRadius: 15,
-                paddingVertical: 0,
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+        <View style={styles.container}>
+          {/* Шапка */}
+          <View style={styles.header}>
+            <View style={styles.headerTitle}>
+              <Image
+                source={require("D:/Vodnic/GrowGuard/assets/icons/sprout.png")}
+                style={styles.logoImage}
+              />
+              <Text style={styles.logoText}>GrowGuard</Text>
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "flex-end",
+                paddingRight: 16,
               }}
-              anchor={
-                <TouchableOpacity onPress={openMenu}>
-                  <Ionicons
-                    name="ellipsis-vertical"
-                    size={24}
-                    color="#4C6E45"
-                  />
-                </TouchableOpacity>
-              }
             >
-              <Menu.Item onPress={() => {}} title="Видалити" />
-            </Menu>
+              <Menu
+                visible={visible}
+                onDismiss={closeMenu}
+                anchor={
+                  <TouchableOpacity onPress={openMenu}>
+                    <Ionicons
+                      name="ellipsis-vertical"
+                      size={24}
+                      color="#4C6E45"
+                    />
+                  </TouchableOpacity>
+                }
+              >
+                <Menu.Item onPress={() => {}} title="Видалити" />
+              </Menu>
+            </View>
           </View>
+
+          <Text style={styles.title}>Мої теплиці</Text>
+
+          {/* <FlatList
+            data={greenhouses}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <GreenhouseItem
+                greenhouse={item}
+                onPress={() =>
+                  router.push({
+                    pathname: "../greenhouse/gh_details",
+                    params: { id: item.id },
+                  })
+                }
+              />
+            )}
+            refreshing={loading}
+            onRefresh={loadGreenhouses}
+          /> */}
+          <GreenhouseItem
+            name={`Теплиця №${connectedGreenhouseId ?? "?"} `}
+            status={connectedStatus} // ← динамічно оновлюється
+            isRealTime
+          />
+          {/* <GreenhouseItem name={`Теплиця #${6}`} status={status} /> */}
+
+          <TouchableOpacity style={styles.addButton} onPress={handleCreate}>
+            <Ionicons name="add" size={36} color="white" />
+          </TouchableOpacity>
         </View>
-
-        <Text style={styles.title}>Мої теплиці</Text>
-
-        <FlatList
-          data={greenhouses}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-          refreshing={loading}
-          onRefresh={() => {
-            // Рефреш списку
-            setLoading(true);
-            setGreenhouses([]);
-            joinedGroupsRef.current.clear(); // очищаємо щоб знову приєднатись
-            //  повторне завантаження
-            (async () => {
-              try {
-                const ghList = await getUserGreenhouses();
-                setGreenhouses(
-                  ghList.map((gh: any) => ({
-                    id: gh.id,
-                    name: gh.name,
-                    status: "loading",
-                  }))
-                );
-                setLoading(false);
-              } catch {
-                setLoading(false);
-              }
-            })();
-          }}
-        />
-
-        <TouchableOpacity style={styles.addButton} onPress={handleCreate}>
-          <Ionicons name="add" size={36} color="white" />
-        </TouchableOpacity>
       </SafeAreaView>
     </KeyboardAvoidingView>
   );
@@ -303,7 +150,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 30,
     backgroundColor: "#fff",
   },
   header: {

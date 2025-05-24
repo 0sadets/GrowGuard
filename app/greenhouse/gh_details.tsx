@@ -1,54 +1,28 @@
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+// screens/GreenhouseDetailsScreen.tsx
+import React, { useEffect, useState } from "react";
+import { Image, View, Text, StyleSheet, ScrollView, ActivityIndicator } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
 import { getGreenhouseById } from "@/lib/api";
-import GreenhouseStatusIndicator from "@/context/GreenhouseStatusContext";
+// import { useSignalR } from "@/lib/SignalRProvider";
+import { GreenhouseStatusIndicator } from "@/components/StatusIndicator";
+import BackButton from "@/components/BackButton";
 
 export default function GreenhouseDetailsScreen() {
-  const { id } = useLocalSearchParams();
-  const [greenhouse, setGreenhouse] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  
+  // return (
+  //   <ScrollView contentContainerStyle={styles.container}>
+  //     <View style={styles.header}>
+  //       <BackButton style={styles.backButton} />
+  //       <Text style={styles.title}>{greenhouse.name}</Text>
+  //       <Image
+  //         source={require("../../assets/icons/sprout.png")}
+  //         style={styles.logoImage}
+  //       />
+  //     </View>
 
-  useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        const data = await getGreenhouseById(Number(id));
-        setGreenhouse(data);
-      } catch (err) {
-        console.error("Помилка при завантаженні теплиці:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDetails();
-  }, [id]);
-
-  if (loading) {
-    return <Text>Завантаження...</Text>;
-  }
-
-  if (!greenhouse) {
-    return <Text>Теплицю не знайдено</Text>;
-  }
-
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-        <GreenhouseStatusIndicator greenhouseId={1} />
-
-      <Text style={styles.title}>{greenhouse.name}</Text>
-      <Text style={styles.subtitle}>ID: {greenhouse.id}</Text>
-      <Text style={styles.section}>Рослини:</Text>
-      {greenhouse.plants?.length > 0 ? (
-        greenhouse.plants.map((plant: any) => (
-          <Text key={plant.id} style={styles.plantItem}>
-            {plant.name} — {plant.category}
-          </Text>
-        ))
-      ) : (
-        <Text style={styles.plantItem}>Немає доданих рослин</Text>
-      )}
-    </ScrollView>
-  );
+  //     <GreenhouseStatusIndicator status={status} />
+  //   </ScrollView>
+  // );
 }
 
 const styles = StyleSheet.create({
@@ -57,22 +31,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     flexGrow: 1,
   },
+  header: {
+    alignItems: "center",
+    marginBottom: 5,
+    marginTop: 15,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  logoImage: {
+    width: 24,
+    height: 24,
+    marginTop: 4,
+  },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 26,
+    fontFamily: "Nunito-Regular",
+    textAlign: "center",
     marginBottom: 10,
+    color: "#423a3a",
+    left: -10,
   },
-  subtitle: {
-    fontSize: 16,
-    color: "#555",
-    marginBottom: 20,
+  backButton: {
+    left: -15,
   },
-  section: {
-    fontSize: 18,
-    marginBottom: 10,
-  },
-  plantItem: {
-    fontSize: 16,
-    marginBottom: 8,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

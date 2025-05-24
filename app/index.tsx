@@ -1,39 +1,46 @@
-// app/index.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
 
 export default function SplashScreen() {
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
-  const [animationDone, setAnimationDone] = useState(false);
 
   useEffect(() => {
-    Animated.sequence([
-      Animated.timing(scaleAnim, {
-        toValue: 1.5,
-        duration: 1000,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }),
-      Animated.timing(scaleAnim, {
-        toValue: 1.4,
-        duration: 500,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: true,
-      }),
-    ]).start(() => setAnimationDone(true));
+    Animated.timing(scaleAnim, {
+      toValue: 1,
+      duration: 1000,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
   }, []);
 
   useEffect(() => {
     const navigateAfterDelay = async () => {
-      // Почекати ~2.5 секунди, поки анімація іде
       await new Promise((res) => setTimeout(res, 2500));
 
-      const token = await AsyncStorage.getItem("auth_token"); // слідкуй за точним ключем
-      if (token) {
-        router.replace("/(tabs)/main");
-      } else {
+      const token = await AsyncStorage.getItem("auth_token");
+      if (!token) {
+        router.replace("/registration/step1");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://192.168.1.101:5004/api/Auth/validate-token", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          router.replace("/(tabs)/main");
+        } else {
+          await AsyncStorage.removeItem("auth_token");
+          router.replace("/registration/step1");
+        }
+      } catch (error) {
+        console.error("Помилка при перевірці токена:", error);
         router.replace("/registration/step1");
       }
     };
