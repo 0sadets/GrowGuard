@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
   header: {
     alignItems: "center",
     marginBottom: 30,
+    marginTop:30,
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
   },
   bottomPart: {
     position: "absolute",
-    bottom: 20,
+    bottom: 60,
     left: 34,
     right: 34,
   },

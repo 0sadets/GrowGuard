@@ -1,11 +1,12 @@
-import GreenhouseItem from "@/components/GreenhouseItem";
+// import GreenhouseItem from "@/components/GreenhouseItem";
 import { useGreenhouseSignalR } from "@/hooks/useGreenhouseSignalR";
-import { getGreenhouseIdBySerialNumber } from "@/lib/api";
+import { getGreenhouseIdBySerialNumber, getGreenhouseStatus, getUserGreenhouses } from "@/lib/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
+  FlatList,
   Image,
   KeyboardAvoidingView,
   Platform,
@@ -17,29 +18,52 @@ import {
 } from "react-native";
 import { Menu } from "react-native-paper";
 
-
+const getStatusColor = (status: string): string => {
+    console.log(status);
+  switch (status) {
+    case "good":
+      return "#9be68d";
+    case "warning":
+      return "#f3d498";
+    case "error":
+      return "#f29d9d";
+    default:
+      return "gray";
+  }
+};
 const SERIAL_NUMBER = "ARDUINO-001";
 export default function MainScreen() {
-  const [loading, setLoading] = useState(true);
+   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
-  const [connectedGreenhouseId, setConnectedGreenhouseId] = useState<
-    number | null
-  >(null);
+  const [greenhouses, setGreenhouses] = useState<any[]>([]);
+  const [connectedGreenhouseId, setConnectedGreenhouseId] = useState<number | null>(null);
   const [connectedStatus, setConnectedStatus] = useState("nodata");
 
-  useEffect(() => {
-    const fetchGreenhouseId = async () => {
-      try {
-        const id = await getGreenhouseIdBySerialNumber(SERIAL_NUMBER);
-        setConnectedGreenhouseId(id);
-        console.log("🔗 Теплиця, підключена до пристрою:", id);
-      } catch (error) {
-        console.log("⚠️ Пристрій не підключено до жодної теплиці");
-      }
-    };
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const userGreenhouses = await getUserGreenhouses();
+      setGreenhouses(userGreenhouses);
 
-    fetchGreenhouseId();
-  }, []);
+      const deviceGreenhouseId = await getGreenhouseIdBySerialNumber(SERIAL_NUMBER);
+      setConnectedGreenhouseId(deviceGreenhouseId);
+      console.log("🔗 Підключена теплиця:", deviceGreenhouseId);
+
+      const statusResponse = await getGreenhouseStatus(deviceGreenhouseId);
+      setConnectedStatus(statusResponse.status); 
+      console.log("📡 Статус теплиці:", statusResponse.status);
+    } catch (error) {
+      console.error("⚠️ Помилка при завантаженні даних:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, []);
+
+
+
   useGreenhouseSignalR(connectedGreenhouseId, setConnectedStatus);
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
@@ -48,28 +72,51 @@ export default function MainScreen() {
     "Nunito-Bold": require("../../assets/fonts/Nunito-Bold.ttf"),
     "Nunito-Italic": require("../../assets/fonts/Nunito-Italic.ttf"),
   });
-  // const loadGreenhouses = async () => {
-  //   setLoading(true);
-  //   try {
-  //     const data = await getUserGreenhouses();
-  //     setGreenhouses(data);
-  //   } catch (error) {
-  //     console.error("❌ Не вдалося завантажити теплиці:", error);
-  //   }
-  //   setLoading(false);
-  // };
 
-  // useEffect(() => {
-  //   loadGreenhouses();
-  // }, []);
   const handleCreate = () => {
     router.push("../forms/createGreenhouse");
   };
-
+const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const updatedGreenhouses = await getUserGreenhouses();
+      setGreenhouses(updatedGreenhouses);
+    } catch (error) {
+      console.error("❌ Не вдалося оновити теплиці:", error);
+    }
+    setLoading(false);
+  };
   if (!fontsLoaded) {
     return <Text>Завантаження шрифтів...</Text>;
   }
 
+
+const renderItem = ({ item }: { item: any }) => (
+  <TouchableOpacity
+    style={styles.item}
+    onPress={() =>
+      router.push({
+        pathname: "../greenhouse/gh_details",
+        params: { id: item.id },
+      })
+    }
+  >
+    <View
+      style={[
+        styles.statusDot,
+        { backgroundColor: getStatusColor(item.status ?? "nodata") },
+      ]}
+    />
+    <Text style={styles.name}>{item.name ?? `Теплиця №${item.id}`}</Text>
+    <Ionicons name="chevron-forward" size={20} color="#4C6E45" />
+  </TouchableOpacity>
+);
+ const filteredGreenhouses = greenhouses.filter(
+    (gh) => gh.id !== connectedGreenhouseId
+  );
+  const connectedGreenhouse = greenhouses.find(
+    (gh) => gh.id === connectedGreenhouseId
+  );
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -113,29 +160,34 @@ export default function MainScreen() {
 
           <Text style={styles.title}>Мої теплиці</Text>
 
-          {/* <FlatList
-            data={greenhouses}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <GreenhouseItem
-                greenhouse={item}
-                onPress={() =>
-                  router.push({
-                    pathname: "../greenhouse/gh_details",
-                    params: { id: item.id },
-                  })
-                }
-              />
-            )}
-            refreshing={loading}
-            onRefresh={loadGreenhouses}
-          /> */}
-          <GreenhouseItem
-            name={`Теплиця №${connectedGreenhouseId ?? "?"} `}
-            status={connectedStatus} // ← динамічно оновлюється
-            isRealTime
-          />
-          {/* <GreenhouseItem name={`Теплиця #${6}`} status={status} /> */}
+          {!connectedGreenhouse && filteredGreenhouses.length === 0 && !loading && (
+          <View style={{ alignItems: "center", marginTop: 40 }}>
+            <Text style={{ color: "#4C6E45", fontSize: 16, fontFamily: "Nunito-Regular" }}>
+              У вас ще немає жодної теплиці.
+            </Text>
+          </View>
+        )}
+
+         {connectedGreenhouse && (
+          renderItem({
+            item: {
+              ...connectedGreenhouse,
+              name: connectedGreenhouse.name ?? `Теплиця №${connectedGreenhouse.id}`,
+              status: connectedStatus,
+            },
+          })
+        )}
+
+           {/* Інші теплиці */}
+          <FlatList
+          data={filteredGreenhouses}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderItem}
+          refreshing={loading}
+          onRefresh={handleRefresh}
+        />
+
+
 
           <TouchableOpacity style={styles.addButton} onPress={handleCreate}>
             <Ionicons name="add" size={36} color="white" />
