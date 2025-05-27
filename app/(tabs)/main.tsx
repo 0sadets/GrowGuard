@@ -27,6 +27,8 @@ const getStatusColor = (status: string): string => {
       return "#f3d498";
     case "error":
       return "#f29d9d";
+      case "nodata":
+      return "#BDBDBD"; 
     default:
       return "gray";
   }
@@ -64,7 +66,10 @@ useEffect(() => {
 
 
 
-  useGreenhouseSignalR(connectedGreenhouseId, setConnectedStatus);
+  useGreenhouseSignalR(
+  connectedGreenhouseId,
+  (statusWithAlerts) => setConnectedStatus(statusWithAlerts.status)
+);
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
 
@@ -104,7 +109,8 @@ const renderItem = ({ item }: { item: any }) => (
     <View
       style={[
         styles.statusDot,
-        { backgroundColor: getStatusColor(item.status ?? "nodata") },
+        { backgroundColor: getStatusColor(typeof item.status === 'string' ? item.status : item.status?.status ?? "nodata") }
+
       ]}
     />
     <Text style={styles.name}>{item.name ?? `Теплиця №${item.id}`}</Text>
@@ -134,15 +140,16 @@ const renderItem = ({ item }: { item: any }) => (
               <Text style={styles.logoText}>GrowGuard</Text>
             </View>
             <View
-              style={{
+              style={{ 
                 flexDirection: "row",
                 justifyContent: "flex-end",
-                paddingRight: 16,
+                paddingRight: 10,
+                paddingVertical:0
               }}
             >
               <Menu
                 visible={visible}
-                onDismiss={closeMenu}
+                onDismiss={closeMenu} 
                 anchor={
                   <TouchableOpacity onPress={openMenu}>
                     <Ionicons
@@ -153,7 +160,7 @@ const renderItem = ({ item }: { item: any }) => (
                   </TouchableOpacity>
                 }
               >
-                <Menu.Item onPress={() => {}} title="Видалити" />
+                <Menu.Item  onPress={() => {}} title="Видалити" />
               </Menu>
             </View>
           </View>
@@ -203,7 +210,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 30,
-    backgroundColor: "#fff",
+    backgroundColor: "#F5F5F5",
   },
   header: {
     alignItems: "center",
@@ -290,4 +297,10 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 6,
   },
+  menuText:{
+    fontFamily: "Nunito-Regular",
+    fontSize: 16,
+    color: "#333",
+   
+  }
 });

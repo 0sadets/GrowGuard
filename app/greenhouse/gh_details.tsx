@@ -1,9 +1,18 @@
 // screens/GreenhouseDetailsScreen.tsx
+import BackButton from "@/components/BackButton";
+import SensorDisplay from "@/components/Gh_details/real_data";
+import GHGreatIndicator from "@/components/GhGreatIndicator";
+import { useGreenhouseSignalR } from "@/hooks/useGreenhouseSignalR";
 import {
   getGreenhouseById,
   getGreenhouseIdBySerialNumber,
   getGreenhouseStatus,
+  getLastSensorData,
 } from "@/lib/api";
+import connection from "@/lib/SignalRProvider";
+import type { SensorData, StatusWithAlerts } from "@/types/types";
+import { Ionicons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
 import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
@@ -14,13 +23,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-// import { useSignalR } from "@/lib/SignalRProvider";
-import BackButton from "@/components/BackButton";
-import GHGreatIndicator from "@/components/GhGreatIndicator";
-import { useGreenhouseSignalR } from "@/hooks/useGreenhouseSignalR";
-import connection from "@/lib/SignalRProvider";
-import { Ionicons } from "@expo/vector-icons";
-import { useFonts } from "expo-font";
 import { Menu } from "react-native-paper";
 
 interface Plant {
@@ -55,13 +57,17 @@ export default function GreenhouseDetailsScreen() {
   const { id } = useLocalSearchParams();
   const [greenhouse, setGreenhouse] = useState<Greenhouse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [status, setStatus] = useState<
-    "good" | "warning" | "error" | "disconnected" | "nodata"
-  >("nodata");
+  const [status, setStatus] = useState<StatusWithAlerts>({
+    status: "nodata",
+    alerts: [],
+  });
+
   const [visible, setVisible] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [activeTab, setActiveTab] = useState<"indicators" | "standards" | "controls">("indicators");
-
+  const [activeTab, setActiveTab] = useState<
+    "indicators" | "standards" | "controls"
+  >("indicators");
+  const [sensorData, setSensorData] = useState<SensorData | null>(null);
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
 
@@ -80,8 +86,21 @@ export default function GreenhouseDetailsScreen() {
           setGreenhouse(data);
 
           const statusResponse = await getGreenhouseStatus(Number(id));
-          setStatus(statusResponse.status);
-          console.log("📡 Статус теплиці:", statusResponse.status);
+          setStatus(statusResponse);
+          console.log("Статус теплиці:", statusResponse.status);
+
+          const lastData = await getLastSensorData(Number(id));
+          console.log("📊 Останні дані з сенсорів:", lastData);
+          const mappedData: SensorData = {
+            airTemperature: lastData.airTemp,
+            airHumidity: lastData.airHum,
+            soilTemperature: lastData.soilTemp,
+            soilHumidity: lastData.soilHum,
+            light: lastData.lightLevel,
+            greenhouseId: lastData.greenhouseId,
+          };
+
+          setSensorData(mappedData);
         }
         const deviceGreenhouseId = await getGreenhouseIdBySerialNumber(
           "ARDUINO-001"
@@ -99,7 +118,7 @@ export default function GreenhouseDetailsScreen() {
     };
 
     fetchGreenhouse();
-
+    console.log("121");
     if (!connection) return;
 
     return () => {
@@ -107,15 +126,24 @@ export default function GreenhouseDetailsScreen() {
     };
   }, [id, connection]);
 
-  useGreenhouseSignalR(Number(id), (newStatus) => {
-    const allowed = ["good", "warning", "error", "disconnected", "nodata"];
-    if (allowed.includes(newStatus)) {
-      setStatus(newStatus as any);
+  useGreenhouseSignalR(
+    Number(id),
+    (newStatus: StatusWithAlerts) => {
+      const allowed = ["good", "warning", "error", "disconnected", "nodata"];
+      if (allowed.includes(newStatus.status)) {
+        console.log("SignalR оновлює статус:", newStatus);
+        setStatus({ ...newStatus }); 
+      }
+    },
+    (data) => {
+      console.log("SignalR оновлює дані сенсорів:", data);
+      setSensorData(data);
     }
-  });
+  );
 
   if (loading) return <ActivityIndicator size="large" color="#4C6E45" />;
   if (!greenhouse) return <Text>Теплицю не знайдено.</Text>;
+  console.log("статус 146 рядок: ", status.status);
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
@@ -143,25 +171,50 @@ export default function GreenhouseDetailsScreen() {
           </Menu>
         </View>
       </View>
-      <GHGreatIndicator status={status} isConnected={isConnected} />
+
+      <GHGreatIndicator
+        status={status.status ?? "nodata"}
+        isConnected={isConnected}
+      />
+
       <View style={styles.tabMenu}>
-  <TouchableOpacity onPress={() => setActiveTab("indicators")}>
-    <Text style={activeTab === "indicators" ? styles.activeTab : styles.inactiveTab}>Показники</Text>
-  </TouchableOpacity>
-  <TouchableOpacity onPress={() => setActiveTab("standards")}>
-    <Text style={activeTab === "standards" ? styles.activeTab : styles.inactiveTab}>Норми</Text>
-  </TouchableOpacity>
-  <TouchableOpacity onPress={() => setActiveTab("controls")}>
-    <Text style={activeTab === "controls" ? styles.activeTab : styles.inactiveTab}>Керування</Text>
-  </TouchableOpacity>
-</View>
-{/* <View style={styles.tabContent}>
-  {activeTab === "indicators" && <IndicatorsComponent greenhouseId={greenhouse.id} />}
-  {activeTab === "standards" && <StandardsComponent plants={greenhouse.plants} />}
-  {activeTab === "controls" && <ControlsComponent greenhouseId={greenhouse.id} />}
-</View> */}
-
-
+        <TouchableOpacity onPress={() => setActiveTab("indicators")}>
+          <Text
+            style={
+              activeTab === "indicators" ? styles.activeTab : styles.inactiveTab
+            }
+          >
+            Показники
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setActiveTab("standards")}>
+          <Text
+            style={
+              activeTab === "standards" ? styles.activeTab : styles.inactiveTab
+            }
+          >
+            Норми
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => setActiveTab("controls")}>
+          <Text
+            style={
+              activeTab === "controls" ? styles.activeTab : styles.inactiveTab
+            }
+          >
+            Керування
+          </Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.tabContent}>
+        {activeTab === "indicators" && (
+          <SensorDisplay
+            greenhouseId={Number(id)}
+            sensorData={sensorData}
+            status={status}
+          />
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -169,7 +222,7 @@ export default function GreenhouseDetailsScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: "#fff",
+    backgroundColor: "#F5F5F5",
     flexGrow: 1,
   },
   header: {
@@ -200,7 +253,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-   tabMenu: {
+  tabMenu: {
     flexDirection: "row",
     justifyContent: "space-around",
     marginTop: 20,
@@ -220,6 +273,6 @@ const styles = StyleSheet.create({
     paddingBottom: 5,
   },
   tabContent: {
-    padding: 10,
+    paddingTop: 10,
   },
 });

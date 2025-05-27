@@ -45,6 +45,7 @@ const statusConfig = {
 
 
 export default function GHGreatIndicator ({ status, isConnected }: Props) {
+  console.log("GHGreatIndicator рендер, статус:", status, "isConnected:", isConnected);
   const config = statusConfig[status];
   const [fontsLoaded] = useFonts({
     "Nunito-Bold": require("../assets/fonts/Nunito-Bold.ttf"),

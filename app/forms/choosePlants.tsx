@@ -59,7 +59,7 @@ export default function SteoThree() {
       const baseData = await getGreenhouseData();
       if (!baseData) throw new Error("Дані теплиці не знайдено");
 
-      const token = await AsyncStorage.getItem("auth_token"); 
+      const token = await AsyncStorage.getItem("auth_token");
       const dto = {
         ...baseData,
         plantIds: selected,
@@ -101,23 +101,23 @@ export default function SteoThree() {
       <Text style={styles.pageTitle}>Оберіть культури</Text>
 
       <FlatList
-  data={categories}
-  keyExtractor={(item) => item.id.toString()} 
-  renderItem={({ item }) => (
-    <TouchableOpacity
-      style={[
-        styles.item,
-        selected.includes(item.id) && styles.itemSelected,  
-      ]}
-      onPress={() => toggleCategory(item.id)} 
-    >
-      <Text style={styles.text}>{item.category}</Text>
-      <Pressable onPress={() => openInfo(item.exampleNames.join(", "))}>
-        <Ionicons name="help-circle-outline" size={22} color="#888" />
-      </Pressable>
-    </TouchableOpacity>
-  )}
-/>
+        data={categories}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={[
+              styles.item,
+              selected.includes(item.id) && styles.itemSelected,
+            ]}
+            onPress={() => toggleCategory(item.id)}
+          >
+            <Text style={styles.text}>{item.category}</Text>
+            <Pressable onPress={() => openInfo(item.exampleNames.join(", "))}>
+              <Ionicons name="help-circle-outline" size={22} color="#888" />
+            </Pressable>
+          </TouchableOpacity>
+        )}
+      />
 
       <Modal
         animationType="fade"
@@ -154,13 +154,13 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 34,
     paddingTop: 5,
-    backgroundColor: "#fff",
+    backgroundColor: "#F5F5F5",
     justifyContent: "space-between",
   },
   header: {
     alignItems: "center",
     marginBottom: 30,
-    marginTop:30,
+    marginTop: 30,
     display: "flex",
     flexDirection: "row",
     justifyContent: "space-between",
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
- 
+
   activeDot: {
     width: 12,
     height: 12,

@@ -57,7 +57,7 @@ export default function Login() {
     console.log("Успішний вхід:", accessToken);
 
     // Перехід до головної сторінки теплиці
-    router.push("/greenhouse/main");
+    router.push("/(tabs)/main");
   } catch (error) {
     console.error("Помилка входу:", error);
     alert("Не вдалося увійти. Перевірте ім'я користувача або пароль.");
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 34,
     paddingTop: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#F5F5F5",
     justifyContent: "space-between",
   },
    header: {
