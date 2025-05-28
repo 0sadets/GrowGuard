@@ -1,5 +1,6 @@
 // screens/GreenhouseDetailsScreen.tsx
 import BackButton from "@/components/BackButton";
+import DoubleDropdown from "@/components/Gh_details/norms";
 import SensorDisplay from "@/components/Gh_details/real_data";
 import GHGreatIndicator from "@/components/GhGreatIndicator";
 import { useGreenhouseSignalR } from "@/hooks/useGreenhouseSignalR";
@@ -215,6 +216,12 @@ export default function GreenhouseDetailsScreen() {
           />
         )}
       </View>
+      <View style={styles.tabContent}>
+        {activeTab === "standards" && (
+          <DoubleDropdown greenhouseId={Number(id)}/>
+        )}
+      </View>
+      
     </ScrollView>
   );
 }

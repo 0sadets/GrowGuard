@@ -35,12 +35,11 @@ api.interceptors.response.use(
         const { accessToken } = refreshResponse.data;
         await AsyncStorage.setItem("auth_token", accessToken);
 
-        // 🔁 Повторити оригінальний запит з новим токеном
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        await AsyncStorage.clear(); // Видалити токени
-        return Promise.reject(refreshError); // Викинути з системи
+        await AsyncStorage.clear(); 
+        return Promise.reject(refreshError);
       }
     }
 
@@ -86,17 +85,7 @@ export const loginUser = async(username: string, password: string)=>{
     throw error.response?.data || error.message;
   }
 };
-// export const plantWithExamples = async()=>{
-//   try{
-//     const response = await axios.get(`${API_BASE_URL}/Plant/categories-with-examples`);
-//     console.log(response.data)
-//     return response.data;
-//   }
-//   catch (error: any) {
-//     console.error("Error fetching plants:", error.response?.data);
-//     throw error.response?.data || error.message;
-//   }
-// }
+
 export const plantWithExamples = async () => {
   try {
     const response = await api.get("/Plant/categories-with-examples");
@@ -107,27 +96,6 @@ export const plantWithExamples = async () => {
   }
 };
 
-// export const createGreenhouse = async (dto: any) => {
-//   try {
-//     console.log(dto)
-//     const token = await AsyncStorage.getItem("auth_token");
-//     console.log("Token:", token)
-//     if (!token) throw new Error("Користувач не авторизований.");
-//     console.log("Authorization header: ", `Bearer ${token}`);
-
-//     const response = await axios.post(`${API_BASE_URL}/Greenhouse/create`, dto, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-
-//     return response.data;
-//   } catch (error: any) {
-//     console.error("Помилка при створенні теплиці:", error.response?.data || error.message);
-//     throw error.response?.data || error.message;
-//   }
-// };
 export const createGreenhouse = async (dto: any) => {
   try {
     const response = await api.post("/Greenhouse/create", dto);
@@ -139,31 +107,7 @@ export const createGreenhouse = async (dto: any) => {
 };
 
 
-// export const getGreenhouseStatus = async (greenhouseId: number) => {
-//   try {
-//     const token = await AsyncStorage.getItem("auth_token");
-//     if (!token) throw new Error("Користувач не авторизований.");
 
-//     const response = await axios.post(
-//       `${API_BASE_URL}/Greenhouse/status`,
-//        greenhouseId , // <-- обгорнули у JSON-об’єкт
-//       {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//           "Content-Type": "application/json",
-//         },
-//       }
-//     );
-
-//     return response.data;
-//   } catch (error: any) {
-//     console.error(
-//       "Помилка при отриманні статусу теплиці:",
-//       error.response?.data || error.message
-//     );
-//     throw error.response?.data || error.message;
-//   }
-// };
 
 export const getGreenhouseStatus = async (greenhouseId: number) => {
   try {
@@ -180,23 +124,7 @@ export const getGreenhouseStatus = async (greenhouseId: number) => {
 
 
 
-// export const getUserGreenhouses = async () => {
-//   try {
-//     const token = await AsyncStorage.getItem("auth_token");
-//     if (!token) throw new Error("Користувач не авторизований.");
-//     console.log("token: ", token);
-//     const response = await axios.get(`${API_BASE_URL}/Greenhouse/user-greenhouses`, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
 
-//     return response.data; // масив теплиць
-//   } catch (error: any) {
-//     console.error("Помилка при отриманні теплиць:", error.response?.data || error.message);
-//     throw error.response?.data || error.message;
-//   }
-// };
 
 export const getUserGreenhouses = async () => {
   try {
@@ -208,23 +136,7 @@ export const getUserGreenhouses = async () => {
   }
 };
 
-// export const getGreenhouseById = async (id: number) => {
-//   try {
-//     const token = await AsyncStorage.getItem("auth_token");
-//     if (!token) throw new Error("Користувач не авторизований.");
-    
-//     const response = await axios.get(`${API_BASE_URL}/Greenhouse/${id}`, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
 
-//     return response.data;
-//   } catch (error: any) {
-//     console.error("Помилка при отриманні деталей теплиці:", error.response?.data || error.message);
-//     throw error.response?.data || error.message;
-//   }
-// };
 export const getGreenhouseById = async (id: number) => {
   try {
     const response = await api.get(`/Greenhouse/${id}`);
@@ -235,23 +147,7 @@ export const getGreenhouseById = async (id: number) => {
   }
 };
 
-// export const getLastSensorData = async (id: number)=>{
-//   try {
-//     const token = await AsyncStorage.getItem("auth_token");
-//     if (!token) throw new Error("Користувач не авторизований.");
 
-//     const response = await axios.get(`${API_BASE_URL}/Sensor/latest/${id}`, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-
-//     return response.data;
-//   } catch (error: any) {
-//     console.error("Помилка при отриманні крайніх даних:", error.response?.data || error.message);
-//     throw error.response?.data || error.message;
-//   }
-// }
 export const getLastSensorData = async (id: number) => {
   try {
     const response = await api.get(`/Sensor/latest/${id}`);
@@ -268,6 +164,26 @@ export const getGreenhouseIdBySerialNumber = async (serialNumber: string = "ARDU
     return response.data as number;
   } catch (error: any) {
     console.error("Не вдалося отримати greenhouseId по serialNumber:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};
+
+export const getRecommendationById = async (id: number) =>{
+  try{
+    const response = await api.get(`Greenhouse/${id}/recommendation`);
+    return response.data;
+  }catch (error:any){
+    console.error("Помилка при отриманні рекомендацій теплиці", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};
+
+export const getuserSettingsByGHId = async (id: number)=>{
+  try{
+    const response = await api.get(`UserSettings/${id}`);
+    return response.data;
+  }catch (error:any){
+    console.error("Помилка при налаштувань користувача:", error.response?.data || error.message);
     throw error.response?.data || error.message;
   }
 };
