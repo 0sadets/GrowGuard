@@ -14,7 +14,7 @@ import connection from "@/lib/SignalRProvider";
 import type { SensorData, StatusWithAlerts } from "@/types/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -71,7 +71,7 @@ export default function GreenhouseDetailsScreen() {
   const [sensorData, setSensorData] = useState<SensorData | null>(null);
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
-
+  // const navigation = useNavigation();
   const [fontsLoaded] = useFonts({
     "Nunito-Bold": require("../../assets/fonts/Nunito-Bold.ttf"),
     "Nunito-Italic": require("../../assets/fonts/Nunito-Italic.ttf"),
@@ -119,7 +119,7 @@ export default function GreenhouseDetailsScreen() {
     };
 
     fetchGreenhouse();
-    console.log("121");
+    // console.log("121");
     if (!connection) return;
 
     return () => {
@@ -144,7 +144,7 @@ export default function GreenhouseDetailsScreen() {
 
   if (loading) return <ActivityIndicator size="large" color="#4C6E45" />;
   if (!greenhouse) return <Text>Теплицю не знайдено.</Text>;
-  console.log("статус 146 рядок: ", status.status);
+  // console.log("статус 146 рядок: ", status.status);
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
@@ -166,7 +166,11 @@ export default function GreenhouseDetailsScreen() {
               </TouchableOpacity>
             }
           >
-            <Menu.Item onPress={() => {}} title="Редагувати теплицю" />
+            <Menu.Item
+              onPress={() => router.push({ pathname: './update_gh', params: { id: greenhouse.id } })}
+              title="Редагувати теплицю"
+            />
+
             <Menu.Item onPress={() => {}} title="Переглянути інформацію" />
             <Menu.Item onPress={() => {}} title="Видалити теплицю" />
           </Menu>
