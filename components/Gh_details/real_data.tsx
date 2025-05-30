@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 10,
     padding: 10,
-    maxHeight: 200,
+    maxHeight: 230,
     overflow: "hidden",
   },
 });

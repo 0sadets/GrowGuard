@@ -1,10 +1,10 @@
 // screens/GreenhouseDetailsScreen.tsx
-import BackButton from "@/components/BackButton";
 import DoubleDropdown from "@/components/Gh_details/norms";
 import SensorDisplay from "@/components/Gh_details/real_data";
 import GHGreatIndicator from "@/components/GhGreatIndicator";
 import { useGreenhouseSignalR } from "@/hooks/useGreenhouseSignalR";
 import {
+  assignDevice,
   getGreenhouseById,
   getGreenhouseIdBySerialNumber,
   getGreenhouseStatus,
@@ -12,12 +12,13 @@ import {
 } from "@/lib/api";
 import connection from "@/lib/SignalRProvider";
 import type { SensorData, StatusWithAlerts } from "@/types/types";
-import { Ionicons } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
-import { router, useLocalSearchParams, useNavigation } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -112,7 +113,7 @@ export default function GreenhouseDetailsScreen() {
           setIsConnected(false);
         }
       } catch (error) {
-        console.error("❌ Помилка при завантаженні теплиці:", error);
+        console.log(" Помилка при завантаженні теплиці:", error);
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -126,6 +127,33 @@ export default function GreenhouseDetailsScreen() {
       isMounted = false;
     };
   }, [id, connection]);
+  const handleConnectDevice = () => {
+    Alert.alert(
+      "Підключити пристрій",
+      `Підключити теплицю "${greenhouse?.name}" до ARDUINO-001?`,
+      [
+        {
+          text: "Скасувати",
+          style: "cancel",
+        },
+        {
+          text: "Так",
+          onPress: async () => {
+            try {
+              await assignDevice({
+                serialNumber: "ARDUINO-001",
+                greenhouseId: greenhouse!.id,
+              });
+              Alert.alert("Успіх", "Пристрій успішно підключено ✅");
+              setIsConnected(true);
+            } catch (error) {
+              Alert.alert("Помилка", "Не вдалося підключити пристрій ❌");
+            }
+          },
+        },
+      ]
+    );
+  };
 
   useGreenhouseSignalR(
     Number(id),
@@ -133,7 +161,7 @@ export default function GreenhouseDetailsScreen() {
       const allowed = ["good", "warning", "error", "disconnected", "nodata"];
       if (allowed.includes(newStatus.status)) {
         console.log("SignalR оновлює статус:", newStatus);
-        setStatus({ ...newStatus }); 
+        setStatus({ ...newStatus });
       }
     },
     (data) => {
@@ -148,8 +176,21 @@ export default function GreenhouseDetailsScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
-        <BackButton style={styles.backButton} />
-        <Text style={styles.title}>{greenhouse.name}</Text>
+        {/* <BackButton style={styles.backButton} /> */}
+        <TouchableOpacity
+          style={[styles.sideButton, { left: -15 }]}
+          onPress={() =>
+            router.push({
+              pathname: "../(tabs)/main",
+            })
+          }
+        >
+          <AntDesign name="left" size={24} color="#C89F94" />
+        </TouchableOpacity>
+
+        <View style={{ flex: 1, alignItems: "center" }}>
+          <Text style={styles.title}>{greenhouse.name}</Text>
+        </View>
 
         <View
           style={{
@@ -161,18 +202,36 @@ export default function GreenhouseDetailsScreen() {
             visible={visible}
             onDismiss={closeMenu}
             anchor={
-              <TouchableOpacity onPress={openMenu}>
-                <Ionicons name="ellipsis-vertical" size={24} color="#B48A75" />
+              <TouchableOpacity
+                style={[styles.sideButton, { right: -15 }]}
+                onPress={openMenu}
+              >
+                {/* <Ionicons name="ellipsis-vertical" size={24} color="#B48A75" /> */}
+                <AntDesign name="setting" size={26} color="#B48A75" />
               </TouchableOpacity>
             }
           >
             <Menu.Item
-              onPress={() => router.push({ pathname: './update_gh', params: { id: greenhouse.id } })}
+              onPress={() =>
+                router.push({
+                  pathname: "./update_gh",
+                  params: { id: greenhouse.id },
+                })
+              }
               title="Редагувати теплицю"
             />
 
             <Menu.Item onPress={() => {}} title="Переглянути інформацію" />
             <Menu.Item onPress={() => {}} title="Видалити теплицю" />
+            <Menu.Item
+              onPress={handleConnectDevice}
+              title={
+                isConnected
+                  ? "Теплиця підключена"
+                  : "Підключити теплицю до пристрою"
+              }
+              disabled={isConnected}
+            />
           </Menu>
         </View>
       </View>
@@ -222,10 +281,9 @@ export default function GreenhouseDetailsScreen() {
       </View>
       <View style={styles.tabContent}>
         {activeTab === "standards" && (
-          <DoubleDropdown greenhouseId={Number(id)}/>
+          <DoubleDropdown greenhouseId={Number(id)} />
         )}
       </View>
-      
     </ScrollView>
   );
 }
@@ -237,28 +295,38 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   header: {
-    alignItems: "center",
-    marginBottom: 5,
-    marginTop: 15,
     flexDirection: "row",
-    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    marginTop: 15,
+    marginBottom: 10,
   },
   logoImage: {
     width: 24,
     height: 24,
     marginTop: 4,
+    right: 2,
   },
   title: {
     fontSize: 26,
     fontFamily: "Nunito-Regular",
     textAlign: "center",
+    alignSelf: "center",
     marginBottom: 10,
     color: "#423a3a",
     left: -10,
   },
   backButton: {
+    position: "absolute",
     left: -15,
+    padding: 10,
+    alignSelf: "flex-start",
   },
+  sideButton: {
+    width: 40, // однакова ширина для обох боків, щоб текст завжди по центру
+    alignItems: "center",
+  },
+
   loadingContainer: {
     flex: 1,
     justifyContent: "center",

@@ -87,7 +87,7 @@ const handleRefresh = async () => {
       const updatedGreenhouses = await getUserGreenhouses();
       setGreenhouses(updatedGreenhouses);
     } catch (error) {
-      console.error("❌ Не вдалося оновити теплиці:", error);
+      console.log(" Не вдалося оновити теплиці:", error);
     }
     setLoading(false);
   };

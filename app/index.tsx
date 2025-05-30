@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Animated, Easing, StyleSheet, Text, View } from "react-native";
@@ -8,41 +7,49 @@ export default function SplashScreen() {
 
   useEffect(() => {
     Animated.timing(scaleAnim, {
-      toValue: 1,
-      duration: 1000,
+      toValue: 1.2,
+      duration: 3000,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start();
   }, []);
 
+  // useEffect(() => {
+  //   const navigateAfterDelay = async () => {
+  //     await new Promise((res) => setTimeout(res, 2500));
+
+  //     const token = await AsyncStorage.getItem("auth_token");
+  //     if (!token) {
+  //       router.replace("/registration/step1");
+  //       return;
+  //     }
+
+  //     try {
+  //       const response = await fetch("http://192.168.1.102:5004/api/Auth/validate-token", {
+  //         method: "GET",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
+
+  //       if (response.ok) {
+  //         router.replace("/(tabs)/main");
+  //       } else {
+  //         await AsyncStorage.removeItem("auth_token");
+  //         router.replace("/registration/step1");
+  //       }
+  //     } catch (error) {
+  //       console.error("Помилка при перевірці токена:", error);
+  //       router.replace("/registration/step1");
+  //     }
+  //   };
+
+  //   navigateAfterDelay();
+  // }, []);
   useEffect(() => {
     const navigateAfterDelay = async () => {
       await new Promise((res) => setTimeout(res, 2500));
-
-      const token = await AsyncStorage.getItem("auth_token");
-      if (!token) {
-        router.replace("/registration/step1");
-        return;
-      }
-
-      try {
-        const response = await fetch("http://192.168.1.102:5004/api/Auth/validate-token", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          router.replace("/(tabs)/main");
-        } else {
-          await AsyncStorage.removeItem("auth_token");
-          router.replace("/registration/step1");
-        }
-      } catch (error) {
-        console.error("Помилка при перевірці токена:", error);
-        router.replace("/registration/step1");
-      }
+      router.replace("/registration/step1");
     };
 
     navigateAfterDelay();

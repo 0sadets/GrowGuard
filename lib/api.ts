@@ -106,7 +106,21 @@ export const createGreenhouse = async (dto: any) => {
   }
 };
 
-
+export const assignDevice = async(dto:any)=>{
+   try {
+    const response = await api.post("/Greenhouse/assign-device", dto);
+   if (response.status === 200) {
+      console.log("Пристрій успішно прив'язаний до теплиці.");
+      return true;
+    } else {
+      console.warn("Неочікуваний статус відповіді:", response.status);
+      return false;
+    }
+  } catch (error: any) {
+    console.error("Помилка при прив'язці пристрою:", error.response?.data || error.message);
+    throw error;
+  }
+}
 
 
 export const getGreenhouseStatus = async (greenhouseId: number) => {
@@ -153,8 +167,9 @@ export const getLastSensorData = async (id: number) => {
     const response = await api.get(`/Sensor/latest/${id}`);
     return response.data;
   } catch (error: any) {
-    console.error("Помилка при отриманні крайніх даних:", error.response?.data || error.message);
-    throw error.response?.data || error.message;
+    // console.error("Помилка при отриманні крайніх даних:", error.response?.data || error.message);
+    // throw error.response?.data || error.message;
+    console.log("Помилка при отриманні крайніх даних:", error.response?.data || error.message);
   }
 };
 
@@ -187,3 +202,16 @@ export const getuserSettingsByGHId = async (id: number)=>{
     throw error.response?.data || error.message;
   }
 };
+
+export const updateGreenhouseSettings = async (greenhouseId: number, settingsDto: any) => {
+  try {
+    const response = await api.put(`/Greenhouse/${greenhouseId}`, settingsDto);
+    return response.data; 
+  } catch (error) {
+    console.error('Помилка оновлення налаштувань:', error);
+    throw error;
+  }
+};
+
+// export default api;
+

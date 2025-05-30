@@ -97,7 +97,7 @@ const handleNext = async () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 170 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 180 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -227,8 +227,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 34,
-    paddingTop: 5,
-    backgroundColor: "#F5F5F5",
+    // paddingTop: 5,
+    paddingVertical: 40,
+    backgroundColor: "#F5F5F5Name",
     justifyContent: "space-between",
   },
   header: {
