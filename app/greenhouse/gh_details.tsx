@@ -228,7 +228,7 @@ export default function GreenhouseDetailsScreen() {
               title={
                 isConnected
                   ? "Теплиця підключена"
-                  : "Підключити теплицю до пристрою"
+                  : "Підключити до пристрою"
               }
               disabled={isConnected}
             />
@@ -293,6 +293,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#F5F5F5",
     flexGrow: 1,
+    paddingTop: 30,
   },
   header: {
     flexDirection: "row",
@@ -316,14 +317,14 @@ const styles = StyleSheet.create({
     color: "#423a3a",
     left: -10,
   },
-  backButton: {
-    position: "absolute",
-    left: -15,
-    padding: 10,
-    alignSelf: "flex-start",
-  },
+  // backButton: {
+  //   position: "absolute",
+  //   left: -15,
+  //   padding: 10,
+  //   alignSelf: "flex-start",
+  // },
   sideButton: {
-    width: 40, // однакова ширина для обох боків, щоб текст завжди по центру
+    width: 40, 
     alignItems: "center",
   },
 

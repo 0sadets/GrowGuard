@@ -1,130 +1,163 @@
 import BackButton from "@/components/BackButton";
+import RangeInputField from "@/components/RangeInputField";
 import {
+  generateSettings,
   getGreenhouseById,
-  plantWithExamples,
-  updateGreenhouseSettings,
+  getuserSettingsByGHId,
+  updateClimateSetting,
 } from "@/lib/api";
-import { Ionicons } from "@expo/vector-icons";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import { Picker } from "@react-native-picker/picker";
+import { AntDesign } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
-  Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-interface Plant {
-  id: number;
-  category: string;
-  optimalAirTempMin: number;
-  optimalAirTempMax: number;
-  optimalAirHumidityMin: number;
-  optimalAirHumidityMax: number;
-  optimalSoilHumidityMin: number;
-  optimalSoilHumidityMax: number;
-  optimalSoilTempMin: number;
-  optimalSoilTempMax: number;
-  optimalLightMin: number;
-  optimalLightMax: number;
-  optimalLightHourPerDay: number;
-  exampleNames: string;
-  features: string;
-}
 
-interface Greenhouse {
-  id: number;
-  name: string;
-  length: number;
-  width: number;
-  height: number;
-  season: string;
-  location: string;
-  plants: Plant[];
-}
-
-export default function UpdateGHForm() {
+export default function UpdateSettings() {
   const { id } = useLocalSearchParams();
   console.log("id: ", id);
   const [greenhouse, setGreenhouse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
 
-  const [name, setName] = useState("");
-  const [location, setLocation] = useState("");
-  const [season, setSeason] = useState("");
-  const [length, setLength] = useState("");
-  const [width, setWidth] = useState("");
-  const [height, setHeight] = useState("");
+  const [airTempMin, setairTempMin] = useState("");
+  const [airTempMax, setairTempMax] = useState("");
+
+  const [airHumidityMin, setAirHumidityMin] = useState("");
+  const [airHumidityMax, setAirHumidityMax] = useState("");
+
+  const [soilHumidityMin, setSoilHumidityMin] = useState("");
+  const [soilHumidityMax, setSoilHumidityMax] = useState("");
+
+  const [soilTempMin, setSoilTempMin] = useState("");
+  const [soilTempMax, setSoilTempMax] = useState("");
+
+  const [lightMin, setLightMin] = useState("");
+  const [lightMax, setLightMax] = useState("");
 
   // Фокуси для стилів
-  const [nameFocused, setNameFocused] = useState(false);
-  const [locationFocused, setLocationFocused] = useState(false);
-  const [seasonFocused, setSeasonFocused] = useState(false);
-  const [lengthFocused, setLengthFocused] = useState(false);
-  const [widthFocused, setWidthFocused] = useState(false);
-  const [heightFocused, setHeightFocused] = useState(false);
-  // рослини
-  const [categories, setCategories] = useState<any[]>([]);
-  const [selected, setSelected] = useState<number[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [modalText, setModalText] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [airTempMinFocused, setairTempMinFocused] = useState(false);
+  const [airTempMaxFocused, setairTempMaxFocused] = useState(false);
+
+  const [airHumidityMinFocused, setAirHumidityMinFocused] = useState(false);
+  const [airHumidityMaxFocused, setAirHumidityMaxFocused] = useState(false);
+
+  const [soilHumidityMinFocused, setSoilHumidityMinFocused] = useState(false);
+  const [soilHumidityMaxFocused, setSoilHumidityMaxFocused] = useState(false);
+
+  const [soilTempMinFocused, setSoilTempMinFocused] = useState(false);
+  const [soilTempMaxFocused, setSoilTempMaxFocused] = useState(false);
+
+  const [lightMinFocused, setLightMinFocused] = useState(false);
+  const [lightMaxFocused, setLightMaxFocused] = useState(false);
 
   const [errors, setErrors] = useState({
-    name: "",
-    location: "",
-    season: "",
-    length: "",
-    width: "",
-    height: "",
+    airTempMin: "",
+    airTempMax: "",
+    airHumidityMin: "",
+    airHumidityMax: "",
+    soilHumidityMin: "",
+    soilHumidityMax: "",
+    soilTempMin: "",
+    soilTempMax: "",
+    lightMin: "",
+    lightMax: "",
   });
 
   const validateFields = () => {
-    if (selected.length === 0) {
-      setErrorMessage("Будь ласка, оберіть хоча б одну категорію культур.");
-      return;
-    }
     const newErrors = {
-      name: "",
-      location: "",
-      season: "",
-      length: "",
-      width: "",
-      height: "",
+      airTempMin: "",
+      airTempMax: "",
+      airHumidityMin: "",
+      airHumidityMax: "",
+      soilHumidityMin: "",
+      soilHumidityMax: "",
+      soilTempMin: "",
+      soilTempMax: "",
+      lightMin: "",
+      lightMax: "",
     };
 
-    if (!name.trim()) newErrors.name = "Назва є обовʼязковою";
-    if (!location.trim()) newErrors.location = "Розташування є обовʼязковим";
-    else if (name.length > 100)
-      newErrors.name = "Назва не може перевищувати 100 символів";
+    const validateNumber = (
+      value: string,
+      min: number,
+      max: number
+    ): string => {
+      if (value.trim() === "") return "Поле не може бути порожнім";
+      const num = Number(value);
+      if (isNaN(num)) return "Значення має бути числом";
+      if (num < min || num > max) return `Допустимий діапазон: ${min}–${max}`;
+      return "";
+    };
 
-    if (location.length > 200)
-      newErrors.location = "Максимальна довжина — 200 символів";
+    // Валідація кожного поля
+    newErrors.airTempMin = validateNumber(airTempMin, -20, 60);
+    newErrors.airTempMax = validateNumber(airTempMax, -20, 60);
+    newErrors.airHumidityMin = validateNumber(airHumidityMin, 0, 100);
+    newErrors.airHumidityMax = validateNumber(airHumidityMax, 0, 100);
+    newErrors.soilHumidityMin = validateNumber(soilHumidityMin, 0, 100);
+    newErrors.soilHumidityMax = validateNumber(soilHumidityMax, 0, 100);
+    newErrors.soilTempMin = validateNumber(soilTempMin, -20, 60);
+    newErrors.soilTempMax = validateNumber(soilTempMax, -20, 60);
+    newErrors.lightMin = validateNumber(lightMin, 0, 100000);
+    newErrors.lightMax = validateNumber(lightMax, 0, 100000);
 
-    if (!season) newErrors.season = "Оберіть сезон";
+    const num = (val: string) => Number(val);
 
-    if (!length || isNaN(Number(length)) || Number(length) <= 0)
-      newErrors.length = "Довжина має бути більше 0";
-
-    if (!width || isNaN(Number(width)) || Number(width) <= 0)
-      newErrors.width = "Ширина має бути більше 0";
-
-    if (!height || isNaN(Number(height)) || Number(height) <= 0)
-      newErrors.height = "Висота має бути більше 0";
+    // Перевірка: мін не більший за макс
+    if (
+      !newErrors.airTempMin &&
+      !newErrors.airTempMax &&
+      num(airTempMin) > num(airTempMax)
+    ) {
+      newErrors.airTempMin = "Мін. не може бути більшим за макс.";
+      newErrors.airTempMax = "Макс. має бути ≥ мін.";
+    }
+    if (
+      !newErrors.airHumidityMin &&
+      !newErrors.airHumidityMax &&
+      num(airHumidityMin) > num(airHumidityMax)
+    ) {
+      newErrors.airHumidityMin = "Мін. не може бути більшим за макс.";
+      newErrors.airHumidityMax = "Макс. має бути ≥ мін.";
+    }
+    if (
+      !newErrors.soilHumidityMin &&
+      !newErrors.soilHumidityMax &&
+      num(soilHumidityMin) > num(soilHumidityMax)
+    ) {
+      newErrors.soilHumidityMin = "Мін. не може бути більшим за макс.";
+      newErrors.soilHumidityMax = "Макс. має бути ≥ мін.";
+    }
+    if (
+      !newErrors.soilTempMin &&
+      !newErrors.soilTempMax &&
+      num(soilTempMin) > num(soilTempMax)
+    ) {
+      newErrors.soilTempMin = "Мін. не може бути більшим за макс.";
+      newErrors.soilTempMax = "Макс. має бути ≥ мін.";
+    }
+    if (
+      !newErrors.lightMin &&
+      !newErrors.lightMax &&
+      num(lightMin) > num(lightMax)
+    ) {
+      newErrors.lightMin = "Мін. не може бути більшим за макс.";
+      newErrors.lightMax = "Макс. має бути ≥ мін.";
+    }
 
     setErrors(newErrors);
 
-    return Object.values(newErrors).every((val) => val === "");
+    return Object.values(newErrors).every((msg) => msg === "");
   };
 
   const [fontsLoaded] = useFonts({
@@ -132,25 +165,33 @@ export default function UpdateGHForm() {
     "Nunito-Italic": require("../../assets/fonts/Nunito-Italic.ttf"),
     "Nunito-Regular": require("../../assets/fonts/Nunito-Regular.ttf"),
   });
+
   useEffect(() => {
     if (!id) return;
 
     const fetchData = async () => {
       try {
-        const data = await getGreenhouseById(Number(id));
+        const greenhouseData = await getGreenhouseById(Number(id));
+        setGreenhouse(greenhouseData);
 
-        setGreenhouse(data);
-        setName(data.name || "");
-        setLocation(data.location || "");
-        setSeason(data.season || "");
-        setLength(String(data.length || ""));
-        setWidth(String(data.width || ""));
-        setHeight(String(data.height || ""));
-        if (data?.plants) {
-          const plantIds = data.plants.map((plant: Plant) => plant.id);
-          setSelected(plantIds);
+        const settingsData = await getuserSettingsByGHId(Number(id));
+        if (Array.isArray(settingsData) && settingsData.length > 0) {
+          const settings = settingsData[0];
+
+          setairTempMin(String(settings.airTempMin));
+          setairTempMax(String(settings.airTempMax));
+          setAirHumidityMin(String(settings.airHumidityMin));
+          setAirHumidityMax(String(settings.airHumidityMax));
+          setSoilHumidityMin(String(settings.soilHumidityMin));
+          setSoilHumidityMax(String(settings.soilHumidityMax));
+          setSoilTempMin(String(settings.soilTempMin));
+          setSoilTempMax(String(settings.soilTempMax));
+          setLightMin(String(settings.lightMin));
+          setLightMax(String(settings.lightMax));
+          console.log("Налаштування успішно завантажені", settings);
+        } else {
+          console.warn("Немає даних налаштувань для теплиці");
         }
-        console.log(data);
       } catch (err: any) {
         setError(err.message || "Помилка");
       } finally {
@@ -158,18 +199,7 @@ export default function UpdateGHForm() {
       }
     };
 
-    const fetchCategories = async () => {
-      try {
-        const data = await plantWithExamples();
-        setCategories(data);
-      } catch (error) {
-        console.error("Помилка при отриманні даних:", error);
-        setErrorMessage("Не вдалося завантажити категорії культур.");
-      }
-    };
     fetchData();
-
-    fetchCategories();
   }, [id]);
 
   if (loading) {
@@ -177,51 +207,46 @@ export default function UpdateGHForm() {
       <ActivityIndicator size="large" color="green" style={{ marginTop: 50 }} />
     );
   }
-  const toggleCategory = (id: number) => {
-    if (selected.includes(id)) {
-      setSelected((prev) => prev.filter((item) => item !== id));
-    } else if (selected.length < 3) {
-      setSelected((prev) => [...prev, id]);
-    }
-    if (selected.length === 0) {
-      setErrorMessage("");
-    }
-  };
-
-  const openInfo = (examples: string) => {
-    setModalText(examples);
-    setModalVisible(true);
-  };
 
   if (error) {
     return <Text style={{ color: "red", marginTop: 20 }}>{error}</Text>;
   }
   const onSave = async () => {
     const isValid = validateFields();
-
-    if (!isValid) {
-      return;
-    }
-    const settingsDto = {
-      name,
-      length,
-      width,
-      height,
-      season,
-      location,
-      plantIds: selected,
-    };
-    console.log("settingsDto: ", settingsDto);
+    if (!isValid) return;
     try {
-      await updateGreenhouseSettings(Number(id), settingsDto);
-      alert("Налаштування успішно збережено!");
-      // за потреби: navigation.goBack() або navigate
+      const dto = {
+        airTempMin: Number(airTempMin),
+        airTempMax: Number(airTempMax),
+        airHumidityMin: Number(airHumidityMin),
+        airHumidityMax: Number(airHumidityMax),
+        soilHumidityMin: Number(soilHumidityMin),
+        soilHumidityMax: Number(soilHumidityMax),
+        soilTempMin: Number(soilTempMin),
+        soilTempMax: Number(soilTempMax),
+        lightMin: Number(lightMin),
+        lightMax: Number(lightMax),
+      };
+
+      await updateClimateSetting(Number(id), dto);
+      alert("Налаштування успішно оновлено!");
       router.back();
     } catch (error) {
       alert("Помилка при збереженні налаштувань");
+      console.error(error);
     }
   };
 
+  const onGenerate = async () => {
+    try {
+      await generateSettings(Number(id));
+      alert("Налаштування успішно згенеровано!");
+      router.back();
+    } catch (error) {
+      alert("Помилка при генерації налаштувань");
+      console.error(error);
+    }
+  };
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -232,38 +257,116 @@ export default function UpdateGHForm() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* header */}
         <View style={styles.header}>
-          <BackButton style={styles.backButton} />
-          <View style={styles.titleContainer}>
-            <Text style={styles.pageTitle}>{greenhouse.name}</Text>
-            <FontAwesome6
-              name="edit"
-              size={24}
-              color="black"
-              style={styles.icon}
-            />
+          <TouchableOpacity style={[styles.sideButton, { left: -15 }]}>
+            <BackButton />
+          </TouchableOpacity>
+          <Text style={styles.pageTitle}> Кліматичні умови</Text>
+          <View style={{ position: "relative" }}>
+            <TouchableOpacity onPress={() => setShowTooltip(!showTooltip)}>
+              <AntDesign name="questioncircleo" size={24} color="#C89F94" />
+            </TouchableOpacity>
+
+            {showTooltip && (
+              <View style={styles.tooltipBox}>
+                <Text style={styles.tooltipText}>
+                  Налаштуйте власні оптимальні параметри
+                </Text>
+              </View>
+            )}
           </View>
         </View>
-          <Text style={styles.inputSubTitle}>Загальна інформація</Text>
-          <View>
-            <Text style={styles.inputLabel}>Назва теплиці</Text>
-            <TextInput
-              style={[styles.input, nameFocused && styles.inputFocused]}
-              onFocus={() => setNameFocused(true)}
-              onBlur={() => setNameFocused(false)}
-              placeholder="Введіть назву теплиці"
-              placeholderTextColor="#999"
-              value={name}
-              onChangeText={setName}
-            />
-            {errors.name ? (
-              <Text style={styles.errorText}>{errors.name}</Text>
-            ) : null}
-          </View>
-          
-        <View style={styles.bottomPart}>
+
+        {/* form */}
+
+        <RangeInputField
+          title="Температура повітря"
+          minValue={airTempMin}
+          maxValue={airTempMax}
+          setMinValue={setairTempMin}
+          setMaxValue={setairTempMax}
+          minFocused={airTempMinFocused}
+          maxFocused={airTempMaxFocused}
+          setMinFocused={setairTempMinFocused}
+          setMaxFocused={setairTempMaxFocused}
+          minError={errors.airTempMin}
+          maxError={errors.airTempMax}
+        />
+
+        <RangeInputField
+          title="Вологість повітря"
+          minValue={airHumidityMin}
+          maxValue={airHumidityMax}
+          setMinValue={setAirHumidityMin}
+          setMaxValue={setAirHumidityMax}
+          minFocused={airHumidityMinFocused}
+          maxFocused={airHumidityMaxFocused}
+          setMinFocused={setAirHumidityMinFocused}
+          setMaxFocused={setAirHumidityMaxFocused}
+          minError={errors.airHumidityMin}
+          maxError={errors.airHumidityMax}
+        />
+
+        <RangeInputField
+          title="Вологість ґрунту"
+          minValue={soilHumidityMin}
+          maxValue={soilHumidityMax}
+          setMinValue={setSoilHumidityMin}
+          setMaxValue={setSoilHumidityMax}
+          minFocused={soilHumidityMinFocused}
+          maxFocused={soilHumidityMaxFocused}
+          setMinFocused={setSoilHumidityMinFocused}
+          setMaxFocused={setSoilHumidityMaxFocused}
+          minError={errors.soilHumidityMin}
+          maxError={errors.soilHumidityMax}
+        />
+
+        <RangeInputField
+          title="Температура ґрунту"
+          minValue={soilTempMin}
+          maxValue={soilTempMax}
+          setMinValue={setSoilTempMin}
+          setMaxValue={setSoilTempMax}
+          minFocused={soilTempMinFocused}
+          maxFocused={soilTempMaxFocused}
+          setMinFocused={setSoilTempMinFocused}
+          setMaxFocused={setSoilTempMaxFocused}
+          minError={errors.soilTempMin}
+          maxError={errors.soilTempMax}
+        />
+
+        <RangeInputField
+          title="Освітлення"
+          minValue={lightMin}
+          maxValue={lightMax}
+          setMinValue={setLightMin}
+          setMaxValue={setLightMax}
+          minFocused={lightMinFocused}
+          maxFocused={lightMaxFocused}
+          setMinFocused={setLightMinFocused}
+          setMaxFocused={setLightMaxFocused}
+          minError={errors.lightMin}
+          maxError={errors.lightMax}
+        />
+
+        <View style={{ justifyContent: "space-between" }}>
           <TouchableOpacity style={styles.button} onPress={onSave}>
             <Text style={styles.buttonText}>Зберегти</Text>
+          </TouchableOpacity>
+          <Text
+            style={{
+              marginTop: 10,
+              textAlign: "center",
+              fontFamily: "Nunito-Italic",
+              fontSize: 15,
+              color: "#666666",
+            }}
+          >
+            Або
+          </Text>
+          <TouchableOpacity style={styles.buttonNext} onPress={onGenerate}>
+            <Text style={styles.buttonTextNext}>Згенерувати системою</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -274,69 +377,51 @@ export default function UpdateGHForm() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 34,
+    paddingHorizontal: 20,
     paddingTop: 30,
     backgroundColor: "#F5F5F5",
-    justifyContent: "space-between",
   },
   header: {
-    position: "relative",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
-    marginBottom: 5,
-  },
-  backButton: {
-    position: "absolute",
-    left: -15,
-    top: "25%",
-    transform: [{ translateY: -12 }], // Щоб вертикально по центру
-  },
-  titleContainer: {
     flexDirection: "row",
     alignItems: "center",
+    paddingHorizontal: 10,
+    marginTop: 15,
+    marginBottom: 10,
   },
+  sideButton: {
+    width: 40,
+    alignItems: "center",
+  },
+
   pageTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontFamily: "Nunito-Regular",
     color: "#423a3a",
     textAlign: "center",
+    flex: 1,
+    left: -10,
   },
-  icon: {
-    marginLeft: 8,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "600",
-    textAlign: "center",
 
-    marginBottom: 10,
+  tooltipBox: {
+    position: "absolute",
+    top: 25,
+    left: -175,
+    width: 200,
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 999,
+  },
+  tooltipText: {
+    fontSize: 14,
     color: "#423a3a",
-  },
-  inputSubTitle: {
-    marginTop: 24,
-    fontSize: 22,
     textAlign: "center",
-    marginBottom: 15,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    backgroundColor: "white",
-    padding: 12,
-    fontSize: 16,
-    width: "100%",
-  },
-  inputLabel: {
-    fontSize: 16,
-    marginBottom: 5,
-    marginTop: 10,
-    color: "#2C2C2C",
-  },
-  inputFocused: {
-    borderColor: "#A4D490",
-    borderWidth: 2,
+    fontFamily: "Nunito-Regular",
   },
 
   button: {
@@ -351,82 +436,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  activeDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#A4D490",
-  },
-  bottomPart: {
-    // position: "absolute",
-    // bottom: 50,
-    // left: 0,
-    // right: 0,
-  },
-  inputContainre: {
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-  },
-  lilInputBlock: {
-    display: "flex",
-    flexDirection: "column",
-    margin: 0,
-    alignItems: "center",
-    // textAlign:"center",
-  },
-  inputLil: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
-    width: 60,
-    textAlign: "center",
-    backgroundColor: "white",
-  },
-  errorText: {
-    color: "#D9534F",
-    marginTop: 4,
-    fontSize: 14,
-  },
-  item: {
+
+  buttonNext: {
     backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#eee",
-    paddingVertical: 15,
-    paddingHorizontal: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  itemSelected: {
-    backgroundColor: "#d8f4c8",
-  },
-  text: {
-    fontSize: 16,
-  },
-  limitText: {
-    textAlign: "center",
-    marginTop: 10,
-    fontStyle: "italic",
-    color: "#555",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "#00000099",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalView: {
-    backgroundColor: "#fff",
-    padding: 20,
+    padding: 14,
     borderRadius: 12,
-    maxWidth: "80%",
+    alignItems: "center",
+    marginTop: 10,
+    borderWidth: 2,
+    borderColor: "#C89F94",
   },
-  modalText: {
+  buttonTextNext: {
+    color: "#C89F94",
     fontSize: 16,
-    color: "#333",
+    fontWeight: "600",
   },
 });

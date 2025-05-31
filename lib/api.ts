@@ -195,10 +195,10 @@ export const getRecommendationById = async (id: number) =>{
 
 export const getuserSettingsByGHId = async (id: number)=>{
   try{
-    const response = await api.get(`UserSettings/${id}`);
+    const response = await api.get(`/UserSettings/${id}`);
     return response.data;
   }catch (error:any){
-    console.error("Помилка при налаштувань користувача:", error.response?.data || error.message);
+    console.error("Помилка при отриманні налаштувань користувача:", error.response?.data || error.message);
     throw error.response?.data || error.message;
   }
 };
@@ -212,6 +212,23 @@ export const updateGreenhouseSettings = async (greenhouseId: number, settingsDto
     throw error;
   }
 };
-
+export const updateClimateSetting = async (greenhouseId: number, settingsDto: any) => {
+  try {
+    const response = await api.put(`/UserSettings/${greenhouseId}`, settingsDto);
+    return response.data; 
+  } catch (error) {
+    console.error('Помилка оновлення налаштувань:', error);
+    throw error;
+  }
+};
+export const generateSettings = async (greenhouseId: number)=>{
+ try{
+    const response = await api.get(`/UserSettings/${greenhouseId}/generate-settings`);
+    return response.data;
+  }catch (error:any){
+    console.error("Помилка при генерації налаштувань користувача:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+}
 // export default api;
 

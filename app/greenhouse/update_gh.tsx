@@ -77,7 +77,7 @@ export default function UpdateGHScreen() {
 
         <TouchableOpacity
           style={[styles.button, styles.secondaryButton]}
-          // onPress={() => router.push(`/update_gh/optimal/${id}`)}
+           onPress={() => router.push(`/greenhouse/update_settings_form?id=${id}`)}
         >
           <Text style={styles.buttonText}>Налаштувати клімат</Text>
         </TouchableOpacity>
@@ -91,6 +91,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#F5F5F5",
     flexGrow: 1,
+    paddingTop: 30,
   },
   header: {
     position: "relative",
@@ -106,7 +107,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   pageTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontFamily: "Nunito-Regular",
     color: "#423a3a",
     textAlign: "center",
