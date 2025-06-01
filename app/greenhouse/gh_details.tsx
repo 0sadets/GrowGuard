@@ -221,7 +221,13 @@ export default function GreenhouseDetailsScreen() {
               title="Редагувати теплицю"
             />
 
-            <Menu.Item onPress={() => {}} title="Переглянути інформацію" />
+            <Menu.Item onPress={() =>
+                router.push({
+                  pathname: "./info_screen",
+                  params: { id: greenhouse.id },
+                })
+              }
+               title="Переглянути інформацію" />
             <Menu.Item onPress={() => {}} title="Видалити теплицю" />
             <Menu.Item
               onPress={handleConnectDevice}

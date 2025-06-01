@@ -1,3 +1,4 @@
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -24,7 +25,7 @@ export default function SplashScreen() {
         router.replace("/registration/step1");
         return;
       }
-
+      
       try {
         const response = await fetch("http://192.168.1.102:5004/api/Auth/validate-token", {
           method: "GET",
@@ -39,12 +40,11 @@ export default function SplashScreen() {
           await AsyncStorage.removeItem("auth_token");
           router.replace("/registration/step1");
         }
-      } catch (error) {
-        console.error("Помилка при перевірці токена:", error);
-        router.replace("/registration/step1");
-      }
+        } catch (error) {
+          console.error("Помилка при перевірці токена:", error);
+          router.replace("/registration/step1");
+        }
     };
-
     navigateAfterDelay();
   }, []);
   // useEffect(() => {

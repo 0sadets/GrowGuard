@@ -9,6 +9,9 @@ export default function RootLayout() {
     "Nunito-Regular": require("@/assets/fonts/Nunito-Regular.ttf"),
     "Nunito-Italic": require("@/assets/fonts/Nunito-Italic.ttf"),
     "Nunito-Bold": require("@/assets/fonts/Nunito-Bold.ttf"),
+    "Nunito-BoldItalic": require("@/assets/fonts/Nunito-BoldItalic.ttf"),
+    "Nunito-SemiBoldItalic": require("@/assets/fonts/Nunito-SemiBoldItalic.ttf"),
+    "Nunito-SemiBold": require("@/assets/fonts/Nunito-SemiBold.ttf"),
   });
 
   if (!fontsLoaded) {
@@ -22,7 +25,7 @@ export default function RootLayout() {
   return (
     <PaperProvider>
       {/* <SignalRProvider> */}
-        <Slot />
+      <Slot />
       {/* </SignalRProvider> */}
     </PaperProvider>
   );
