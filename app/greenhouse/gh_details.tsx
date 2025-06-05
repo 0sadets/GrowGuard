@@ -5,6 +5,7 @@ import GHGreatIndicator from "@/components/GhGreatIndicator";
 import { useGreenhouseSignalR } from "@/hooks/useGreenhouseSignalR";
 import {
   assignDevice,
+  deleteGreenhouse,
   getGreenhouseById,
   getGreenhouseIdBySerialNumber,
   getGreenhouseStatus,
@@ -26,6 +27,7 @@ import {
   View,
 } from "react-native";
 import { Menu } from "react-native-paper";
+import Controls from "./control_screen";
 
 interface Plant {
   id: number;
@@ -154,6 +156,29 @@ export default function GreenhouseDetailsScreen() {
       ]
     );
   };
+  const handleDeletePress = (greenhouseId: number) => {
+    Alert.alert("Підтвердження", "Ви дійсно хочете видалити теплицю?", [
+      {
+        text: "Скасувати",
+        style: "cancel",
+      },
+      {
+        text: "Видалити",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await deleteGreenhouse(greenhouseId);
+            Alert.alert("Успішно", "Теплицю видалено.");
+            router.push({
+              pathname: "../(tabs)/main",
+            });
+          } catch (error) {
+            Alert.alert("Помилка", "Не вдалося видалити теплицю ❌");
+          }
+        },
+      },
+    ]);
+  };
 
   useGreenhouseSignalR(
     Number(id),
@@ -221,20 +246,21 @@ export default function GreenhouseDetailsScreen() {
               title="Редагувати теплицю"
             />
 
-            <Menu.Item onPress={() =>
+            <Menu.Item
+              onPress={() =>
                 router.push({
                   pathname: "./info_screen",
                   params: { id: greenhouse.id },
                 })
               }
-               title="Переглянути інформацію" />
-            <Menu.Item onPress={() => {}} title="Видалити теплицю" />
+              title="Переглянути інформацію"
+            />
+            <Menu.Item onPress={() => handleDeletePress(greenhouse.id)} title="Видалити теплицю" />
+
             <Menu.Item
               onPress={handleConnectDevice}
               title={
-                isConnected
-                  ? "Теплиця підключена"
-                  : "Підключити до пристрою"
+                isConnected ? "Теплиця підключена" : "Підключити до пристрою"
               }
               disabled={isConnected}
             />
@@ -290,6 +316,11 @@ export default function GreenhouseDetailsScreen() {
           <DoubleDropdown greenhouseId={Number(id)} />
         )}
       </View>
+       <View style={styles.tabContent}>
+        {activeTab === "controls" && (
+          <Controls  />
+        )}
+      </View>
     </ScrollView>
   );
 }
@@ -330,7 +361,7 @@ const styles = StyleSheet.create({
   //   alignSelf: "flex-start",
   // },
   sideButton: {
-    width: 40, 
+    width: 40,
     alignItems: "center",
   },
 

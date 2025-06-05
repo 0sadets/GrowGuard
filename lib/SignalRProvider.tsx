@@ -6,7 +6,7 @@ import {
 } from "@microsoft/signalr";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = "http://192.168.1.102:5004";
+const API_BASE_URL = "http://192.168.1.100:5004";
 
 const connection = new HubConnectionBuilder()
   .withUrl(`${API_BASE_URL}/sensorHub`, {

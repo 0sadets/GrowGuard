@@ -27,7 +27,7 @@ export default function SplashScreen() {
       }
       
       try {
-        const response = await fetch("http://192.168.1.102:5004/api/Auth/validate-token", {
+        const response = await fetch("http://192.168.1.100:5004/api/Auth/validate-token", {
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

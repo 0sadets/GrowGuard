@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   button: {
-    backgroundColor: "#9BE68D", // основний м'ятний
+    backgroundColor: "#9BE68D", 
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 12,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     
   },
   secondaryButton: {
-    backgroundColor: "#7FCC6F", // темніший варіант основного кольору
+    backgroundColor: "#7FCC6F",
   },
   buttonText: {
     color: "#ffffff",

@@ -62,7 +62,7 @@ export default function MainScreen() {
         setConnectedStatus(statusResponse.status);
         console.log("📡 Статус теплиці:", statusResponse.status);
       } catch (error) {
-        console.error("⚠️ Помилка при завантаженні даних:", error);
+        console.log(" Помилка при завантаженні даних:", error);
       } finally {
         setLoading(false);
       }

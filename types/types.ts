@@ -52,3 +52,16 @@ export interface Plant {
   exampleNames: string;
   features: string;
 }
+export type DeviceStateDto = {
+  ghId: string;
+  timestamp: string;
+  doorStatus: boolean;
+  fanStatus: boolean;
+};
+
+export type DeviceUpdateRequest = {
+  ghId: string;
+  newState: boolean;
+  deviceType: "fan" | "door";
+};
+

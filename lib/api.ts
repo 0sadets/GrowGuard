@@ -1,8 +1,9 @@
 // lib/api.ts
-// import { GreenhouseStatus } from '@/types/greenhouse';
+import { DeviceStateDto, DeviceUpdateRequest } from '@/types/types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from "axios";
-const API_BASE_URL = "http://192.168.1.102:5004/api"; 
+const API_BASE_URL = "http://192.168.1.100:5004/api"; 
+
 // const API_BASE_URL = "http://192.168.42.22:5004/api"; 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -137,6 +138,24 @@ export const getGreenhouseStatus = async (greenhouseId: number) => {
 };
 
 
+export const getLastDeviceState = async (greenhouseId: number): Promise<DeviceStateDto> => {
+  try {
+    const response = await api.get(`/Device/${greenhouseId}/last-state`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Помилка при отриманні останнього стану:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};
+
+export const updateDeviceState = async (update: DeviceUpdateRequest): Promise<void> => {
+  try {
+    await api.post("/Device/state", update);
+  } catch (error: any) {
+    console.error("Помилка при оновленні стану:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};
 
 
 
@@ -178,7 +197,7 @@ export const getGreenhouseIdBySerialNumber = async (serialNumber: string = "ARDU
     const response = await api.get(`/Greenhouse/device/${serialNumber}/greenhouse-id`);
     return response.data as number;
   } catch (error: any) {
-    console.error("Не вдалося отримати greenhouseId по serialNumber:", error.response?.data || error.message);
+    console.log("Не вдалося отримати greenhouseId по serialNumber:", error.response?.data || error.message);
     throw error.response?.data || error.message;
   }
 };
@@ -230,5 +249,15 @@ export const generateSettings = async (greenhouseId: number)=>{
     throw error.response?.data || error.message;
   }
 }
-// export default api;
+
+export const deleteGreenhouse = async (id: number) => {
+  try {
+    const response = await api.delete(`/Greenhouse/${id}`);
+    return response.data;
+  } catch (error: any) {
+    console.error("Помилка при видаленні теплиці:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};
+
 
