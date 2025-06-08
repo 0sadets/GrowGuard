@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 
 export default function TabsLayout() {
   return (
@@ -17,11 +17,11 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="greenhouse2"
+        name="userPage"
         options={{
-          tabBarLabel: "Теплиця",
+          tabBarLabel: "Особистий кабінет",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="leaf-outline" size={size} color={color} />
+            <Feather name="user" size={size} color={color} />
           ),
         }}
       />

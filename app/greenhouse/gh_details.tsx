@@ -27,6 +27,7 @@ import {
   View,
 } from "react-native";
 import { Menu } from "react-native-paper";
+import Toast from "react-native-toast-message";
 import Controls from "./control_screen";
 
 interface Plant {
@@ -74,7 +75,6 @@ export default function GreenhouseDetailsScreen() {
   const [sensorData, setSensorData] = useState<SensorData | null>(null);
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
-  // const navigation = useNavigation();
   const [fontsLoaded] = useFonts({
     "Nunito-Bold": require("../../assets/fonts/Nunito-Bold.ttf"),
     "Nunito-Italic": require("../../assets/fonts/Nunito-Italic.ttf"),
@@ -122,7 +122,6 @@ export default function GreenhouseDetailsScreen() {
     };
 
     fetchGreenhouse();
-    // console.log("121");
     if (!connection) return;
 
     return () => {
@@ -146,10 +145,22 @@ export default function GreenhouseDetailsScreen() {
                 serialNumber: "ARDUINO-001",
                 greenhouseId: greenhouse!.id,
               });
-              Alert.alert("Успіх", "Пристрій успішно підключено ✅");
+              Toast.show({
+                type: "success",
+                text1: "Успіх",
+                text2: "Пристрій успішно підключено",
+                position: "bottom",
+                visibilityTime: 3000,
+              });
               setIsConnected(true);
             } catch (error) {
-              Alert.alert("Помилка", "Не вдалося підключити пристрій ❌");
+              Toast.show({
+                type: "error",
+                text1: "Помилка",
+                text2: "Не вдалося підключити пристрій",
+                position: "bottom",
+                visibilityTime: 3000,
+              });
             }
           },
         },
@@ -168,12 +179,24 @@ export default function GreenhouseDetailsScreen() {
         onPress: async () => {
           try {
             await deleteGreenhouse(greenhouseId);
-            Alert.alert("Успішно", "Теплицю видалено.");
+            Toast.show({
+              type: "success",
+              text1: "Успішно",
+              text2: "Теплицю видалено.",
+              position: "bottom",
+              visibilityTime: 3000,
+            });
             router.push({
               pathname: "../(tabs)/main",
             });
           } catch (error) {
-            Alert.alert("Помилка", "Не вдалося видалити теплицю ❌");
+            Toast.show({
+              type: "error",
+              text1: "Помилка",
+              text2: "Не вдалося видалити теплицю",
+              position: "bottom",
+              visibilityTime: 3000,
+            });
           }
         },
       },
@@ -255,7 +278,10 @@ export default function GreenhouseDetailsScreen() {
               }
               title="Переглянути інформацію"
             />
-            <Menu.Item onPress={() => handleDeletePress(greenhouse.id)} title="Видалити теплицю" />
+            <Menu.Item
+              onPress={() => handleDeletePress(greenhouse.id)}
+              title="Видалити теплицю"
+            />
 
             <Menu.Item
               onPress={handleConnectDevice}
@@ -316,10 +342,8 @@ export default function GreenhouseDetailsScreen() {
           <DoubleDropdown greenhouseId={Number(id)} />
         )}
       </View>
-       <View style={styles.tabContent}>
-        {activeTab === "controls" && (
-          <Controls  />
-        )}
+      <View style={styles.tabContent}>
+        {activeTab === "controls" && <Controls />}
       </View>
     </ScrollView>
   );
@@ -354,12 +378,6 @@ const styles = StyleSheet.create({
     color: "#423a3a",
     left: -10,
   },
-  // backButton: {
-  //   position: "absolute",
-  //   left: -15,
-  //   padding: 10,
-  //   alignSelf: "flex-start",
-  // },
   sideButton: {
     width: 40,
     alignItems: "center",

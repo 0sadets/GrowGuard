@@ -34,10 +34,7 @@ export default function GreenhouseDetailsScreen() {
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
 
-  //   const [fontsLoaded] = useFonts({
-  //     "Nunito-Bold": require("../../assets/fonts/Nunito-Bold.ttf"),
-  //     "Nunito-Italic": require("../../assets/fonts/Nunito-Italic.ttf"),
-  //   });
+
 
   useEffect(() => {
     let isMounted = true;

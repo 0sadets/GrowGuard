@@ -11,8 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import BackButton from "D:/Vodnic/GrowGuard/components/BackButton";
 import { loginUser } from "@/lib/api"; 
+import { AntDesign } from "@expo/vector-icons";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -51,12 +51,10 @@ export default function Login() {
   try {
     console.log("Спроба входу...");
 
-    // виклик API
     const { accessToken, refreshToken } = await loginUser(username, password);
     
     console.log("Успішний вхід:", accessToken);
 
-    // Перехід до головної сторінки теплиці
     router.push("/(tabs)/main");
   } catch (error) {
     console.error("Помилка входу:", error);
@@ -78,7 +76,16 @@ export default function Login() {
         {/* шапка */}
         
         <View style={styles.header}>
-          <BackButton style={styles.backButton} />
+          <TouchableOpacity
+          style={[styles.sideButton, { left: -15 }]}
+          onPress={() =>
+            router.push({
+              pathname: "/registration/step1",
+            })
+          }
+        >
+          <AntDesign name="left" size={24} color="#C89F94" />
+        </TouchableOpacity>
           <Text style={styles.logoText}>GrowGuard</Text>
           <Image
             source={require("D:/Vodnic/GrowGuard/assets/icons/sprout.png")}
@@ -165,8 +172,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  backButton: {
-    left: -15,
+  sideButton: {
+    width: 40,
+    alignItems: "center",
   },
   logoText: {
     fontSize: 16,

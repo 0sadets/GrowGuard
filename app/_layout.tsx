@@ -1,8 +1,9 @@
-// import { SignalRProvider } from "@/lib/SignalRProvider";
+import { MyToast } from "@/components/MyToast";
 import { useFonts } from "expo-font";
 import { Slot } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { Provider as PaperProvider } from "react-native-paper";
+import Toast from "react-native-toast-message";
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -24,9 +25,13 @@ export default function RootLayout() {
 
   return (
     <PaperProvider>
-      {/* <SignalRProvider> */}
       <Slot />
-      {/* </SignalRProvider> */}
+      <Toast
+        config={{
+          success: (props) => <MyToast {...props} />,
+          custom_success: (props) => <MyToast {...props} />,
+        }}
+      />
     </PaperProvider>
   );
 }

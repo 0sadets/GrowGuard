@@ -23,6 +23,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 interface Plant {
   id: number;
   category: string;
@@ -214,11 +215,22 @@ export default function UpdateGHForm() {
     console.log("settingsDto: ", settingsDto);
     try {
       await updateGreenhouseSettings(Number(id), settingsDto);
-      alert("Налаштування успішно збережено!");
-      // за потреби: navigation.goBack() або navigate
+      Toast.show({
+        type: "success",
+        text1: "Успіх",
+        text2: "Налаштування успішно збережено!",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
       router.back();
     } catch (error) {
-      alert("Помилка при збереженні налаштувань");
+      Toast.show({
+        type: "error",
+        text1: "Помилка",
+        text2: "Помилка при збереженні налаштувань",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -356,24 +368,7 @@ export default function UpdateGHForm() {
           ) : null}
         </View>
         <Text style={styles.inputSubTitle}>Культури</Text>
-        {/* <FlatList
-          data={categories}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={[
-                styles.item,
-                selected.includes(item.id) && styles.itemSelected,
-              ]}
-              onPress={() => toggleCategory(item.id)}
-            >
-              <Text style={styles.text}>{item.category}</Text>
-              <Pressable onPress={() => openInfo(item.exampleNames.join(", "))}>
-                <Ionicons name="help-circle-outline" size={22} color="#888" />
-              </Pressable>
-            </TouchableOpacity>
-          )}
-        /> */}
+
         {categories.map((item) => (
           <TouchableOpacity
             key={item.id}
@@ -442,7 +437,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: -15,
     top: "25%",
-    transform: [{ translateY: -12 }], // Щоб вертикально по центру
+    transform: [{ translateY: -12 }], 
   },
   titleContainer: {
     flexDirection: "row",
@@ -510,10 +505,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#A4D490",
   },
   bottomPart: {
-    // position: "absolute",
-    // bottom: 50,
-    // left: 0,
-    // right: 0,
+ 
   },
   inputContainre: {
     display: "flex",

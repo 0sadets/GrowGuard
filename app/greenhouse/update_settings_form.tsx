@@ -20,6 +20,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function UpdateSettings() {
   const { id } = useLocalSearchParams();
@@ -44,7 +45,6 @@ export default function UpdateSettings() {
   const [lightMin, setLightMin] = useState("");
   const [lightMax, setLightMax] = useState("");
 
-  // Фокуси для стилів
   const [airTempMinFocused, setairTempMinFocused] = useState(false);
   const [airTempMaxFocused, setairTempMaxFocused] = useState(false);
 
@@ -99,7 +99,6 @@ export default function UpdateSettings() {
       return "";
     };
 
-    // Валідація кожного поля
     newErrors.airTempMin = validateNumber(airTempMin, -20, 60);
     newErrors.airTempMax = validateNumber(airTempMax, -20, 60);
     newErrors.airHumidityMin = validateNumber(airHumidityMin, 0, 100);
@@ -113,7 +112,6 @@ export default function UpdateSettings() {
 
     const num = (val: string) => Number(val);
 
-    // Перевірка: мін не більший за макс
     if (
       !newErrors.airTempMin &&
       !newErrors.airTempMax &&
@@ -229,10 +227,22 @@ export default function UpdateSettings() {
       };
 
       await updateClimateSetting(Number(id), dto);
-      alert("Налаштування успішно оновлено!");
+      Toast.show({
+        type: "success",
+        text1: "Успіх",
+        text2: "Налаштування успішно оновлено!",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
       router.back();
     } catch (error) {
-      alert("Помилка при збереженні налаштувань");
+      Toast.show({
+        type: "error",
+        text1: "Помилка",
+        text2: "Помилка при збереженні налаштувань",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
       console.error(error);
     }
   };
@@ -240,10 +250,22 @@ export default function UpdateSettings() {
   const onGenerate = async () => {
     try {
       await generateSettings(Number(id));
-      alert("Налаштування успішно згенеровано!");
+      Toast.show({
+        type: "success",
+        text1: "Успіх",
+        text2: "Налаштування успішно згенеровано!",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
       router.back();
     } catch (error) {
-      alert("Помилка при генерації налаштувань");
+      Toast.show({
+        type: "error",
+        text1: "Помилка",
+        text2: "Помилка при генерації налаштувань",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
       console.error(error);
     }
   };
@@ -257,7 +279,6 @@ export default function UpdateSettings() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* header */}
         <View style={styles.header}>
           <TouchableOpacity style={[styles.sideButton, { left: -15 }]}>
             <BackButton />
@@ -278,7 +299,6 @@ export default function UpdateSettings() {
           </View>
         </View>
 
-        {/* form */}
 
         <RangeInputField
           title="Температура повітря"

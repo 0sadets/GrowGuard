@@ -4,12 +4,12 @@ import { useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function Controls() {
   const { id } = useLocalSearchParams();
@@ -22,7 +22,15 @@ export default function Controls() {
       const data = await getLastDeviceState(Number(id));
       setDeviceState(data);
     } catch (error) {
-      Alert.alert("Помилка", "Не вдалося завантажити стан пристрою.");
+      Toast.show({
+        type: "error",
+        text1: "Помилка",
+        text2: "Не вдалося завантажити стан пристрою.",
+        position: "bottom",
+        visibilityTime: 4000,
+        autoHide: true,
+        bottomOffset: 50,
+      });
     } finally {
       setLoading(false);
     }
@@ -32,9 +40,21 @@ export default function Controls() {
     try {
       await updateDeviceState(update);
       await fetchState();
-      Alert.alert("Успіх", "Стан пристрою оновлено.");
+      Toast.show({
+        type: "success",
+        text1: "Успіх",
+        text2: "Стан пристрою оновлено.",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
     } catch (error) {
-      Alert.alert("Помилка", "Не вдалося оновити стан пристрою.");
+      Toast.show({
+        type: "error",
+        text1: "Помилка",
+        text2: "Не вдалося оновити стан пристрою.",
+        position: "bottom",
+        visibilityTime: 3000,
+      });
     }
   };
 
@@ -106,9 +126,9 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
     flex: 1,
-    borderRadius:15,
+    borderRadius: 15,
     borderColor: "#c9dbc8",
-    borderWidth:1,
+    borderWidth: 1,
   },
   title: {
     fontSize: 20,
