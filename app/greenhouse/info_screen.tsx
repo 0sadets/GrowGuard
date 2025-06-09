@@ -1,4 +1,3 @@
-
 import {
   getGreenhouseById,
   getGreenhouseStatus,
@@ -34,8 +33,6 @@ export default function GreenhouseDetailsScreen() {
   const openMenu = () => setVisible(true);
   const closeMenu = () => setVisible(false);
 
-
-
   useEffect(() => {
     let isMounted = true;
 
@@ -70,6 +67,13 @@ export default function GreenhouseDetailsScreen() {
     spring: "Весна",
     winter: "Зима",
     undefined: "Не визначений",
+  };
+  const statusTranslations: Record<string, { text: string; color: string }> = {
+    error: { text: "Погано", color: "#c96a6a" },
+    warning: { text: "Є відхилення", color: "#c29f53" },
+    good: { text: "Добре", color: "#5aab53" },
+    nodata: { text: "Немає даних", color: "#8d8d8d" },
+    undefined: { text: "Невизначено", color: "#616161" },
   };
 
   const renderSeasonText = () => {
@@ -179,7 +183,20 @@ export default function GreenhouseDetailsScreen() {
       {status && (
         <View style={styles.shadowWrapper}>
           <View style={styles.block}>
-            <Text style={styles.Label}>Статус теплиці: {status.status}</Text>
+            <View style={{ marginBottom: 10 }}>
+              <Text style={styles.Label}>Статус теплиці:</Text>
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontSize: 18,
+                  fontFamily: "Nunito-Bold",
+                  color: statusTranslations[status.status]?.color || "#7f8c8d",
+                }}
+              >
+                {statusTranslations[status.status]?.text || "Невідомо"}
+              </Text>
+            </View>
+
             {status.alerts.length > 0 && (
               <>
                 <Text style={styles.lilLabel}>Попередження:</Text>
@@ -296,5 +313,4 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     padding: 15,
   },
-
 });

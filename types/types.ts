@@ -65,3 +65,8 @@ export type DeviceUpdateRequest = {
   deviceType: "fan" | "door";
 };
 
+export type SensorGraphData = {
+  values: number[];
+  min: number;
+  max: number;
+};

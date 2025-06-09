@@ -331,3 +331,13 @@ export const changeUserPassword = async (dto: { CurrentPassword: string; NewPass
     throw error.response?.data || error.message;
   }
 };
+
+export const getChartData = async(id: number)=>{
+  try{
+    const response = await api.get(`/Sensor/charts/${id}`);
+    return response.data;
+  }catch (error: any) {
+    console.error("Помилка при отриманні даних для графіку:", error.response?.data || error.message);
+    throw error.response?.data || error.message;
+  }
+};

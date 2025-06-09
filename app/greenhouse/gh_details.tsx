@@ -279,6 +279,15 @@ export default function GreenhouseDetailsScreen() {
               title="Переглянути інформацію"
             />
             <Menu.Item
+              onPress={() =>
+                router.push({
+                  pathname: "./SensorChartsScreen",
+                  params: { id: greenhouse.id },
+                })
+              }
+              title="Переглянути аналітику теплиці"
+            />
+            <Menu.Item
               onPress={() => handleDeletePress(greenhouse.id)}
               title="Видалити теплицю"
             />
